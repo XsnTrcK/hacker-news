@@ -4,15 +4,13 @@ import 'package:fluent_ui/fluent_ui.dart';
 typedef NoContextWidgetBuilder = Widget Function();
 
 class SwipeUpSheet extends StatefulWidget {
-  final NoContextWidgetBuilder headerBuilder;
+  final Widget Function(bool) headerBuilder;
   final NoContextWidgetBuilder? bodyBuilder;
-  final Widget headerMinimal;
   final double? maxHeight;
 
   const SwipeUpSheet({
     Key? key,
     required this.headerBuilder,
-    required this.headerMinimal,
     required this.bodyBuilder,
     required this.maxHeight,
   }) : super(key: key);
@@ -22,7 +20,7 @@ class SwipeUpSheet extends StatefulWidget {
 }
 
 class _SwipeUpSheetState extends State<SwipeUpSheet> {
-  static const double _minHeight = 62;
+  static const double _minHeight = 72;
   bool _isOpen = false;
   Offset _offset = const Offset(0, _SwipeUpSheetState._minHeight);
 
@@ -53,13 +51,12 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
   }
 
   Widget _createContent(double maxWidth, double maxHeight) {
-    var headerWidget = Padding(
-      padding: const EdgeInsets.all(10),
-      child: _isOpen ? widget.headerBuilder() : widget.headerMinimal,
-    );
     return Column(
       children: [
-        headerWidget,
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: widget.headerBuilder(!_isOpen),
+        ),
         widget.bodyBuilder != null && _isOpen
             ? Expanded(
                 child: widget.bodyBuilder!(),

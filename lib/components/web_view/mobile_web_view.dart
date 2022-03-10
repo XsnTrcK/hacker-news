@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class MobileWebView extends StatelessWidget {
@@ -17,6 +19,12 @@ class MobileWebView extends StatelessWidget {
       javascriptMode: JavascriptMode.unrestricted,
       onWebViewCreated: (WebViewController webViewController) {
         _controller.complete(webViewController);
+      },
+      gestureRecognizers: {
+        Factory<VerticalDragGestureRecognizer>(
+            () => VerticalDragGestureRecognizer()),
+        Factory<HorizontalDragGestureRecognizer>(
+            () => HorizontalDragGestureRecognizer())
       },
     );
   }

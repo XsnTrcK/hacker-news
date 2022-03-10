@@ -44,12 +44,8 @@ class DisplayArticle extends StatelessWidget {
           Expanded(child: _createDisplayDetails()),
           SwipeUpSheet(
             maxHeight: maxHeight,
-            headerMinimal: CustomText(
-              item.title,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            headerBuilder: () => ItemDetails(item, expand: false),
+            headerBuilder: (minimal) =>
+                ItemDetails(item, minimalTitle: minimal, expand: false),
             bodyBuilder: item is ItemWithKids
                 ? () => CommentsSection((item as ItemWithKids))
                 : null,

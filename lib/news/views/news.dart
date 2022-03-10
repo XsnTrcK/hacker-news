@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/components/image_list_item.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
@@ -48,7 +49,7 @@ class _NewsState extends State<News> {
               itemBuilder: (_, index) => GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  FluentPageRoute(
+                  CupertinoPageRoute(
                     builder: (context) => ViewArticles(
                       state.news,
                       initialIndex: index,

@@ -5,9 +5,11 @@ import 'custom_text.dart';
 
 class ItemDetails extends StatelessWidget {
   final TitledItem item;
+  final bool minimalTitle;
   final bool expand;
 
-  const ItemDetails(this.item, {Key? key, this.expand = true})
+  const ItemDetails(this.item,
+      {Key? key, this.minimalTitle = false, this.expand = true})
       : super(key: key);
 
   String rightItemDetails(TitledItem item) {
@@ -35,7 +37,10 @@ class ItemDetails extends StatelessWidget {
         _expandIfNeeded(
           CustomText(
             item.title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            overflow: minimalTitle ? TextOverflow.ellipsis : null,
+            style: minimalTitle
+                ? const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)
+                : const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           flex: 4,
         ),
