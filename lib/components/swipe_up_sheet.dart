@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'package:fluent_ui/fluent_ui.dart';
 
+typedef NoContextWidgetBuilder = Widget Function();
+
 class SwipeUpSheet extends StatefulWidget {
-  final Widget header;
+  final NoContextWidgetBuilder headerBuilder;
+  final NoContextWidgetBuilder? bodyBuilder;
   final Widget headerMinimal;
-  final Widget? body;
   final double? maxHeight;
 
   const SwipeUpSheet({
     Key? key,
-    required this.header,
+    required this.headerBuilder,
     required this.headerMinimal,
-    required this.body,
+    required this.bodyBuilder,
     required this.maxHeight,
   }) : super(key: key);
 
@@ -53,17 +55,17 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
   Widget _createContent(double maxWidth, double maxHeight) {
     var headerWidget = Padding(
       padding: const EdgeInsets.all(10),
-      child: _isOpen ? widget.header : widget.headerMinimal,
+      child: _isOpen ? widget.headerBuilder() : widget.headerMinimal,
     );
     return Column(
       children: [
         headerWidget,
-        widget.body != null && _isOpen
+        widget.bodyBuilder != null && _isOpen
             ? Expanded(
-                child: widget.body!,
+                child: widget.bodyBuilder!(),
               )
             : const SizedBox.shrink(),
-        widget.body != null
+        widget.bodyBuilder != null
             ? ConstrainedBox(
                 constraints: BoxConstraints(minWidth: maxWidth),
                 child: IconButton(
@@ -94,12 +96,6 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
         color: FluentTheme.of(context).brightness == Brightness.light
             ? Colors.white
             : Colors.black,
-        boxShadow: [
-          BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 5,
-              blurRadius: 10)
-        ],
       ),
       child: _createContent(mediaQueryData.size.width, maxHeight),
     );

@@ -17,11 +17,10 @@ abstract class NewsApi {
 
 class NewsApiRetriever implements NewsApi {
   final Client _httpClient;
-  final CommentsFetcher _commentsFetcher;
   late List<int> _newsIds = const [];
   Box<String>? _newsBox;
 
-  NewsApiRetriever(this._httpClient, this._commentsFetcher);
+  NewsApiRetriever(this._httpClient);
 
   Future<Item> _getNewsItem(int id) async {
     final response = await _httpClient.get(config.getItemUri(id));
@@ -60,9 +59,6 @@ class NewsApiRetriever implements NewsApi {
         newsItem = Item.fromJson(newsString);
       } else {
         newsItem = await _getNewsItem(newsId);
-        if (newsItem is ItemWithKids) {
-          _commentsFetcher.fetchComments(newsItem);
-        }
         _newsBox!.put(newsId, jsonEncode(newsItem.toMap()));
       }
       newsToReturn.add(newsItem as TitledItem);

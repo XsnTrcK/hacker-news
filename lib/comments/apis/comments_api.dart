@@ -1,48 +1,84 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'dart:convert';
 import 'package:hackernews/models/item.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart';
 import 'package:hackernews/services/config.dart' as config;
 
-abstract class CommentsFetcher {
-  const CommentsFetcher();
+CommentsApiRetriever? _commentsApi;
 
-  Future fetchComments(ItemWithKids itemWithKids);
+abstract class CommentsHandler {
+  const CommentsHandler();
+
+  Future init();
+  Future<List<CommentItem>> fetchComments(ItemWithKids itemWithKids);
+  CommentItem getComment(int commentId);
+  void updateComment(CommentItem comment);
 }
 
-abstract class CommentsApi {
-  const CommentsApi();
-
-  Future<CommentItem> getComment(int commentId);
-}
-
-class CommentsApiRetriever implements CommentsApi, CommentsFetcher {
+class CommentsApiRetriever implements CommentsHandler {
   final Client _httpClient;
-  Box<String>? _commentsBox;
+  late Box<String> _commentsBox;
 
   CommentsApiRetriever(this._httpClient);
 
   @override
-  Future<CommentItem> getComment(int commentId) async {
-    _commentsBox ??= await Hive.openBox<String>("comments");
+  Future init() async {
+    _commentsBox = await Hive.openBox<String>("comments");
+  }
+
+  Future<CommentItem> _downloadComment(int commentId) async {
     String? commentString;
-    if (_commentsBox!.containsKey(commentId)) {
-      commentString = _commentsBox!.get(commentId);
-    } else {
+    if (!_commentsBox.containsKey(commentId)) {
       final response = await _httpClient.get(config.getItemUri(commentId));
       commentString = response.body;
+      _commentsBox.put(commentId, commentString);
+    } else {
+      commentString = _commentsBox.get(commentId);
     }
-    if (commentString == null) {
-      throw Exception("Unable to successfully retrieve comment");
-    }
-    return Item.fromJson(commentString) as CommentItem;
+
+    return Item.fromJson(commentString!) as CommentItem;
   }
 
   @override
-  Future fetchComments(ItemWithKids itemWithKids) async {
-    _commentsBox ??= await Hive.openBox<String>("comments");
-    await Future.wait(
-        itemWithKids.childrenIds.map((childId) => getComment(childId)));
+  CommentItem getComment(int commentId) {
+    if (!_commentsBox.containsKey(commentId)) {
+      throw Exception("Comment could not be found in the store");
+    } else {
+      return Item.fromJson(_commentsBox.get(commentId)!) as CommentItem;
+    }
   }
+
+  @override
+  Future<List<CommentItem>> fetchComments(ItemWithKids itemWithKids) async {
+    if (itemWithKids.childrenIds.isEmpty) return [];
+    var results = await Future.wait(
+        itemWithKids.childrenIds.map((childId) => _downloadComment(childId)));
+    await Future.wait(
+        results.map((childComment) => _fetchComments(childComment)));
+
+    return results;
+  }
+
+  Future _fetchComments(CommentItem commentItem) async {
+    if (commentItem.childrenIds.isEmpty) return;
+    var results = await Future.wait(
+        commentItem.childrenIds.map((childId) => _downloadComment(childId)));
+    await Future.wait(
+        results.map((childComment) => _fetchComments(childComment)));
+  }
+
+  @override
+  Future updateComment(CommentItem comment) async {
+    _commentsBox.put(comment.id, jsonEncode(comment.toMap()));
+  }
+}
+
+CommentsHandler getCommentsHandler({Client? client}) {
+  if (_commentsApi == null) {
+    _commentsApi = CommentsApiRetriever(client ?? Client());
+    return _commentsApi!;
+  }
+  return _commentsApi!;
 }

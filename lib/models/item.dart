@@ -16,6 +16,21 @@ extension ItemMap on Map<String, dynamic> {
   int get relatedPollId => this["poll"];
   bool get isDeleted => this["deleted"] ?? false;
   bool get isDead => this["dead"] ?? false;
+  ItemState get state => this["state"] == null
+      ? const ItemState()
+      : ItemState(isExpanded: this["state"]["isExpanded"]);
+}
+
+class ItemState extends Equatable {
+  final bool isExpanded;
+  const ItemState({this.isExpanded = true});
+
+  Map<String, dynamic> toMap() {
+    return {"isExpanded": isExpanded};
+  }
+
+  @override
+  List<Object?> get props => [isExpanded];
 }
 
 abstract class Item extends Equatable {
@@ -23,8 +38,10 @@ abstract class Item extends Equatable {
   final int time;
   final String createdBy;
   final String? text;
+  final ItemState state;
 
-  const Item(this.id, this.time, this.createdBy, {this.text});
+  const Item(this.id, this.time, this.createdBy,
+      {this.text, this.state = const ItemState()});
 
   factory Item.fromJson(String jsonString) {
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
@@ -86,6 +103,7 @@ abstract class Item extends Equatable {
           jsonMap.parentId,
           jsonMap.isDeleted,
           jsonMap.isDead,
+          jsonMap.state,
         );
       case "pollopt":
         return PollOptionItem(
@@ -106,6 +124,7 @@ abstract class Item extends Equatable {
       "id": id,
       "time": time,
       "by": createdBy,
+      "state": state.toMap()
     };
     if (text != null) {
       jsonDict["text"] = text!;
@@ -291,9 +310,22 @@ class CommentItem extends Item {
   final bool isDeleted;
   final bool isDead;
 
-  const CommentItem(int id, int time, String createdBy, String text,
-      this.childrenIds, this.parentId, this.isDeleted, this.isDead)
-      : super(id, time, createdBy, text: text);
+  const CommentItem(
+      int id,
+      int time,
+      String createdBy,
+      String text,
+      this.childrenIds,
+      this.parentId,
+      this.isDeleted,
+      this.isDead,
+      ItemState state)
+      : super(id, time, createdBy, text: text, state: state);
+
+  CommentItem copyWith(ItemState state) {
+    return CommentItem(id, time, createdBy, text!, childrenIds, parentId,
+        isDeleted, isDead, state);
+  }
 
   @override
   Map<String, dynamic> toMap() {

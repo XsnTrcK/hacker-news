@@ -1,12 +1,9 @@
-import 'dart:developer';
-
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/components/image_list_item.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
-import 'package:hackernews/news/views/display_article.dart';
 import 'package:hackernews/news/views/view_articles.dart';
 
 class News extends StatefulWidget {

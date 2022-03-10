@@ -1,8 +1,4 @@
-import 'package:fluent_ui/fluent_ui.dart' as fluentUi;
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hackernews/comments/bloc/comment_bloc.dart';
-import 'package:hackernews/comments/bloc/comment_events.dart';
-import 'package:hackernews/comments/bloc/comment_state.dart';
+import 'package:hackernews/comments/apis/comments_api.dart';
 import 'package:hackernews/comments/views/comment.dart';
 import 'package:hackernews/models/item.dart';
 import 'package:flutter/material.dart';
@@ -17,28 +13,28 @@ class CommentsExpansion extends StatefulWidget {
 
 class _CommentsExpansionState extends State<CommentsExpansion> {
   bool _isExpanded = true;
+  late CommentsHandler _commentsHandler;
 
   @override
   void initState() {
     super.initState();
-    context.read<CommentBloc>().add(FetchComment(widget.commentId));
+    _commentsHandler = getCommentsHandler();
   }
 
   Widget itemBuilder(CommentItem comment) {
-    if (comment.childrenIds.isEmpty) {
-      return ListTile(
-        title: Comment(comment),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 5),
-      );
-    }
+    _isExpanded = comment.state.isExpanded;
     return ExpansionTile(
       expandedAlignment: Alignment.centerLeft,
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       maintainState: true,
       tilePadding: const EdgeInsets.symmetric(horizontal: 5),
       textColor: Colors.white, // TODO: Responsive to Brightness
-      initiallyExpanded: true,
-      onExpansionChanged: (expanded) => setState(() => _isExpanded = expanded),
+      initiallyExpanded: _isExpanded,
+      onExpansionChanged: (expanded) {
+        _commentsHandler
+            .updateComment(comment.copyWith(ItemState(isExpanded: expanded)));
+        setState(() => _isExpanded = expanded);
+      },
       title: Comment(
         comment,
         isExpanded: _isExpanded,
@@ -61,20 +57,7 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CommentBloc, CommentState>(
-      builder: (context, state) {
-        switch (state.status) {
-          case CommentStatus.success:
-            return state.comment?.isDeleted ?? true
-                ? const SizedBox.shrink()
-                : itemBuilder(state.comment!);
-          case CommentStatus.failure:
-            return const Center(child: Text('Failed to retrieve comment'));
-          case CommentStatus.initial:
-          default:
-            return const Center(child: fluentUi.ProgressBar());
-        }
-      },
-    );
+    var comment = getCommentsHandler().getComment(widget.commentId);
+    return comment.isDeleted ? const SizedBox.shrink() : itemBuilder(comment);
   }
 }

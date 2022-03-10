@@ -1,5 +1,6 @@
+// ignore_for_file: import_of_legacy_library_into_null_safe
+
 import 'package:fluent_ui/fluent_ui.dart';
-// ignore: import_of_legacy_library_into_null_safe
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/comments/views/comments_section.dart';
 import 'package:hackernews/components/custom_text.dart';
@@ -46,11 +47,11 @@ class DisplayArticle extends StatelessWidget {
             headerMinimal: CustomText(
               item.title,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
-            header: ItemDetails(item, expand: false),
-            body: item is ItemWithKids
-                ? CommentsSection((item as ItemWithKids).childrenIds)
+            headerBuilder: () => ItemDetails(item, expand: false),
+            bodyBuilder: item is ItemWithKids
+                ? () => CommentsSection((item as ItemWithKids))
                 : null,
           ),
         ],
