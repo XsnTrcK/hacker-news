@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/components/image_list_item.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
@@ -43,28 +44,32 @@ class _NewsState extends State<News> {
             if (state.news.isEmpty) {
               return const Center(child: Text('No posts currently available'));
             }
-            return ListView.separated(
-              itemCount: state.news.length,
-              separatorBuilder: (_, __) => const Divider(),
-              itemBuilder: (_, index) => GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (context) => ViewArticles(
-                      state.news,
-                      initialIndex: index,
+            return material.RefreshIndicator(
+              onRefresh: () async =>
+                  context.read<NewsBloc>().add(RefreshNews()),
+              child: ListView.separated(
+                itemCount: state.news.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (_, index) => GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (context) => ViewArticles(
+                        state.news,
+                        initialIndex: index,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: ImageListItem(
+                      state.news[index],
+                      maxHeight: 100,
                     ),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: ImageListItem(
-                    state.news[index],
-                    maxHeight: 100,
-                  ),
-                ),
+                controller: _scrollController,
               ),
-              controller: _scrollController,
             );
           case NewsStatus.failure:
             return const Center(child: Text('Failed to fetch posts'));

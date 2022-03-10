@@ -42,6 +42,7 @@ class NewsBloc extends ThrottledBloc<NewsEvent, NewsState> {
   Future _onRefreshNews(RefreshNews event, Emitter<NewsState> emit) async {
     if (state.hasReachedMax) return;
     try {
+      emit(const NewsState());
       await _newsApi.refresh();
       final newsItems = await _newsApi.getNews();
       emit(NewsState(

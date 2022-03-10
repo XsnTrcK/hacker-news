@@ -30,7 +30,9 @@ class NewsApiRetriever implements NewsApi {
   Future _retrieveNews() async {
     final response = await _httpClient.get(config.topStoriesUri);
     final newsItems = _convertNewsIds(response.body);
-    _newsIds = newsItems..addAll(_newsIds);
+    _newsIds = [
+      ...{...newsItems..addAll(_newsIds)}
+    ];
   }
 
   List<int> _convertNewsIds(String newsIdsJson) {
