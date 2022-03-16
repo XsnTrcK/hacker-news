@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.hackernews">
+    package="com.xsntrck.hackernewser">
    <application
-        android:label="hackernews"
+        android:label="HackerNewser"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
