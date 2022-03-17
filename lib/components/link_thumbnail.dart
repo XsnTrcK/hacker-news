@@ -40,7 +40,7 @@ class LinkThumbnail extends StatelessWidget {
   }
 
   IconData _getReplacementIcon(String url) {
-    var firstChar = url.toLowerCase()[0];
+    var firstChar = url.toLowerCase().replaceAll('www.', '')[0];
     switch (firstChar) {
       case 'a':
         return Mdi.alphaA;
@@ -126,7 +126,8 @@ class LinkThumbnail extends StatelessWidget {
           errorWidget: (_, __, ___) {
             return showErrorIcon
                 ? Icon(
-                    _getReplacementIcon(Uri.parse(imageUrl).host),
+                    _getReplacementIcon(
+                        Uri.parse(imageUrl.isNotEmpty ? imageUrl : url).host),
                     size: 100,
                   )
                 : const SizedBox.shrink();

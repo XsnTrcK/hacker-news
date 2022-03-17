@@ -1,5 +1,14 @@
-abstract class NewsEvent {}
+import 'package:hackernews/news/bloc/news_state.dart';
 
-class FetchNews extends NewsEvent {}
+abstract class NewsEvent {
+  final NewsType newsType;
+  const NewsEvent(this.newsType);
+}
 
-class RefreshNews extends NewsEvent {}
+class FetchNews extends NewsEvent {
+  const FetchNews(NewsType newsType) : super(newsType);
+}
+
+class RefreshNews extends NewsEvent {
+  const RefreshNews(NewsType newsType) : super(newsType);
+}

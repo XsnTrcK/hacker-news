@@ -17,6 +17,7 @@ class News extends StatefulWidget {
 
 class _NewsState extends State<News> {
   final _scrollController = ScrollController();
+  NewsType _newsType = NewsType.top;
 
   @override
   void initState() {
@@ -32,21 +33,58 @@ class _NewsState extends State<News> {
   }
 
   void _onScroll() {
-    if (_isBottom()) context.read<NewsBloc>().add(FetchNews());
+    if (_isBottom()) context.read<NewsBloc>().add(FetchNews(_newsType));
+  }
+
+  NewsType _getNewsType(int selectedItem) {
+    switch (selectedItem) {
+      case 0:
+        return NewsType.top;
+      case 1:
+        return NewsType.show;
+      case 2:
+        return NewsType.ask;
+      case 3:
+        return NewsType.job;
+      case 4:
+        return NewsType.newStories;
+      case 5:
+        return NewsType.best;
+      default:
+        throw Error();
+    }
+  }
+
+  int _getSelectedIndex(NewsType newsType) {
+    switch (newsType) {
+      case NewsType.top:
+        return 0;
+      case NewsType.show:
+        return 1;
+      case NewsType.ask:
+        return 2;
+      case NewsType.job:
+        return 3;
+      case NewsType.newStories:
+        return 4;
+      case NewsType.best:
+        return 5;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<NewsBloc, NewsState>(
       builder: (context, state) {
+        Widget body;
         switch (state.status) {
           case NewsStatus.sucess:
             if (state.news.isEmpty) {
-              return const Center(child: Text('No posts currently available'));
+              body = const Center(child: Text('No posts currently available'));
             }
-            return material.RefreshIndicator(
+            body = material.RefreshIndicator(
               onRefresh: () async =>
-                  context.read<NewsBloc>().add(RefreshNews()),
+                  context.read<NewsBloc>().add(RefreshNews(_newsType)),
               child: ListView.separated(
                 itemCount: state.news.length,
                 separatorBuilder: (_, __) => const Divider(),
@@ -71,12 +109,35 @@ class _NewsState extends State<News> {
                 controller: _scrollController,
               ),
             );
+            break;
           case NewsStatus.failure:
-            return const Center(child: Text('Failed to fetch posts'));
+            body = const Center(child: Text('Failed to fetch posts'));
+            break;
           case NewsStatus.initial:
           default:
-            return const Center(child: ProgressBar());
+            body = const Center(child: ProgressBar());
+            break;
         }
+        return Column(
+          children: [
+            Expanded(child: body),
+            PillButtonBar(
+              selected: _getSelectedIndex(_newsType),
+              items: const [
+                PillButtonBarItem(text: Text("Top")),
+                PillButtonBarItem(text: Text("Show")),
+                PillButtonBarItem(text: Text("Ask")),
+                PillButtonBarItem(text: Text("Job")),
+                PillButtonBarItem(text: Text("New")),
+                PillButtonBarItem(text: Text("Best")),
+              ],
+              onChanged: (index) {
+                _newsType = _getNewsType(index);
+                context.read<NewsBloc>().add(FetchNews(_newsType));
+              },
+            ),
+          ],
+        );
       },
     );
   }

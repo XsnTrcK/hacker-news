@@ -10,7 +10,7 @@ extension ItemMap on Map<String, dynamic> {
   List<int> get childrenIds => this["kids"]?.cast<int>() ?? [];
   int get numberOfChildren => this["descendants"];
   String get url => this["url"];
-  String get text => this["text"];
+  String get text => this["text"] ?? '';
   List<int> get pollOptionIds => this["parts"]?.cast<int>() ?? [];
   int get parentId => this["parent"];
   int get relatedPollId => this["poll"];
@@ -58,7 +58,7 @@ abstract class Item extends Equatable {
             jsonMap.numberOfChildren,
             jsonMap.url,
           );
-        } else if (jsonMap.containsKey("text")) {
+        } else {
           return AskItem(
             jsonMap.id,
             jsonMap.time,
@@ -69,8 +69,6 @@ abstract class Item extends Equatable {
             jsonMap.childrenIds,
             jsonMap.numberOfChildren,
           );
-        } else {
-          throw Exception("Invalid Story received");
         }
       case "job":
         return JobItem(

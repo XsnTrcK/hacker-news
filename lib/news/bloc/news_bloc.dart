@@ -17,20 +17,25 @@ class NewsBloc extends ThrottledBloc<NewsEvent, NewsState> {
   Future _onFetchNews(FetchNews event, Emitter<NewsState> emit) async {
     if (state.hasReachedMax) return;
     try {
-      if (state.status == NewsStatus.initial) {
-        await _newsApi.refresh();
-        final newsItems = await _newsApi.getNews();
+      final hasDifferentNewsType = state.newsType != event.newsType;
+      if (state.status == NewsStatus.initial || hasDifferentNewsType) {
+        if (hasDifferentNewsType) emit(const NewsState());
+        await _newsApi.refresh(event.newsType);
+        final newsItems = await _newsApi.getNews(event.newsType);
         emit(state.copyWith(
           status: NewsStatus.sucess,
           news: newsItems,
           hasReachedMax: false,
+          newsType: event.newsType,
         ));
       } else {
-        final newsItems = await _newsApi.getNews(offset: state.news.length);
+        final newsItems =
+            await _newsApi.getNews(event.newsType, offset: state.news.length);
         emit(state.copyWith(
           status: NewsStatus.sucess,
           news: List.of(state.news)..addAll(newsItems),
           hasReachedMax: false,
+          newsType: event.newsType,
         ));
       }
     } catch (error) {
@@ -43,8 +48,8 @@ class NewsBloc extends ThrottledBloc<NewsEvent, NewsState> {
     if (state.hasReachedMax) return;
     try {
       emit(const NewsState());
-      await _newsApi.refresh();
-      final newsItems = await _newsApi.getNews();
+      await _newsApi.refresh(event.newsType);
+      final newsItems = await _newsApi.getNews(event.newsType);
       emit(NewsState(
         status: NewsStatus.sucess,
         news: newsItems,

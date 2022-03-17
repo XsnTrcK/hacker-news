@@ -14,6 +14,8 @@ class ImageListItem extends StatelessWidget {
     switch (item.runtimeType) {
       case StoryItem:
       case JobItem:
+        final stringUrl = (item as dynamic).url as String?;
+        if (stringUrl == null) return const SizedBox.shrink();
         final url = Uri.parse((item as dynamic).url);
         return Expanded(
           child: Row(
@@ -51,7 +53,8 @@ class ImageListItem extends StatelessWidget {
     switch (item.runtimeType) {
       case StoryItem:
       case JobItem:
-        final String url = (item as dynamic).url;
+        final String? url = (item as dynamic).url;
+        if (url == null) return details;
         return Row(
           children: [
             Expanded(flex: 3, child: details),
