@@ -4,6 +4,7 @@ import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/comments/apis/comments_api.dart';
+import 'package:hackernews/components/hacker_newser_navigation.dart';
 import 'package:hackernews/news/apis/news_api.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
@@ -65,13 +66,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  int _currentIndex = 0;
-
   Widget _createNewsPage() {
     return BlocProvider(
       create: (_) =>
           NewsBloc(widget._newsApi)..add(const FetchNews(NewsType.top)),
-      child: const News(),
+      child: const HackerNewserNavigation(News()),
     );
   }
 
@@ -88,43 +87,7 @@ class _MyAppState extends State<MyApp> {
       themeMode: ThemeMode.system,
       home: ColorfulSafeArea(
         color: Colors.black,
-        child: NavigationView(
-          content: NavigationBody.builder(
-            index: _currentIndex,
-            itemBuilder: (context, index) {
-              switch (index) {
-                case 0:
-                  return _createNewsPage();
-                default:
-                  return Text("Invalid menu item selected: $index");
-              }
-            },
-          ),
-          pane: NavigationPane(
-            displayMode: PaneDisplayMode.top,
-            selected: _currentIndex,
-            onChanged: (index) => setState(() => _currentIndex = index),
-            header: const Text(
-              "Hacker Newser",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            items: [
-              PaneItem(
-                icon: const Icon(FluentIcons.news),
-                title: const Text("News"),
-              ),
-            ],
-            footerItems: [
-              PaneItem(
-                icon: const Icon(FluentIcons.settings),
-                title: const Text("Settings"),
-              )
-            ],
-          ),
-        ),
+        child: _createNewsPage(),
       ),
     );
   }

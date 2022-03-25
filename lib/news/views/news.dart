@@ -36,53 +36,17 @@ class _NewsState extends State<News> {
     if (_isBottom()) context.read<NewsBloc>().add(FetchNews(_newsType));
   }
 
-  NewsType _getNewsType(int selectedItem) {
-    switch (selectedItem) {
-      case 0:
-        return NewsType.top;
-      case 1:
-        return NewsType.show;
-      case 2:
-        return NewsType.ask;
-      case 3:
-        return NewsType.job;
-      case 4:
-        return NewsType.newStories;
-      case 5:
-        return NewsType.best;
-      default:
-        throw Error();
-    }
-  }
-
-  int _getSelectedIndex(NewsType newsType) {
-    switch (newsType) {
-      case NewsType.top:
-        return 0;
-      case NewsType.show:
-        return 1;
-      case NewsType.ask:
-        return 2;
-      case NewsType.job:
-        return 3;
-      case NewsType.newStories:
-        return 4;
-      case NewsType.best:
-        return 5;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<NewsBloc, NewsState>(
       builder: (context, state) {
-        Widget body;
+        _newsType = state.newsType;
         switch (state.status) {
           case NewsStatus.sucess:
             if (state.news.isEmpty) {
-              body = const Center(child: Text('No posts currently available'));
+              return const Center(child: Text('No posts currently available'));
             }
-            body = material.RefreshIndicator(
+            return material.RefreshIndicator(
               onRefresh: () async =>
                   context.read<NewsBloc>().add(RefreshNews(_newsType)),
               child: ListView.separated(
@@ -109,35 +73,12 @@ class _NewsState extends State<News> {
                 controller: _scrollController,
               ),
             );
-            break;
           case NewsStatus.failure:
-            body = const Center(child: Text('Failed to fetch posts'));
-            break;
+            return const Center(child: Text('Failed to fetch posts'));
           case NewsStatus.initial:
           default:
-            body = const Center(child: ProgressBar());
-            break;
+            return const Center(child: ProgressBar());
         }
-        return Column(
-          children: [
-            Expanded(child: body),
-            PillButtonBar(
-              selected: _getSelectedIndex(_newsType),
-              items: const [
-                PillButtonBarItem(text: Text("Top")),
-                PillButtonBarItem(text: Text("Show")),
-                PillButtonBarItem(text: Text("Ask")),
-                PillButtonBarItem(text: Text("Job")),
-                PillButtonBarItem(text: Text("New")),
-                PillButtonBarItem(text: Text("Best")),
-              ],
-              onChanged: (index) {
-                _newsType = _getNewsType(index);
-                context.read<NewsBloc>().add(FetchNews(_newsType));
-              },
-            ),
-          ],
-        );
       },
     );
   }

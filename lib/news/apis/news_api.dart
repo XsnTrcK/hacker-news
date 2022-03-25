@@ -69,13 +69,12 @@ class NewsApiRetriever implements NewsApi {
     if (offset >= (_newsIdsMap[newsType]?.length ?? 0)) {
       return [];
     }
-    var index = offset + 1;
-    var endIndex = index + count >= _newsIdsMap[newsType]!.length
+    var endIndex = offset + count >= _newsIdsMap[newsType]!.length
         ? _newsIdsMap[newsType]!.length
-        : index + count;
+        : offset + count;
     List<TitledItem> newsToReturn = [];
-    for (; index < endIndex; index++) {
-      final newsId = _newsIdsMap[newsType]![index];
+    for (; offset < endIndex; offset++) {
+      final newsId = _newsIdsMap[newsType]![offset];
       Item? newsItem;
       if (_newsBox!.containsKey(newsId)) {
         final newsString = _newsBox?.get(newsId);
