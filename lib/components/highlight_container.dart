@@ -3,27 +3,27 @@ import 'package:fluent_ui/fluent_ui.dart';
 class HighlightContainer extends StatelessWidget {
   final Widget child;
   final bool isSelected;
-  final double? width;
 
   const HighlightContainer(
-      {required this.child, required this.isSelected, this.width, Key? key})
+      {required this.child, required this.isSelected, Key? key})
       : super(key: key);
 
   Widget _createDivider(ThemeData theme) {
-    var divider = Divider(
-      style: DividerThemeData(
-        horizontalMargin: EdgeInsets.symmetric(
-            horizontal: width == null ? 10 : width! * 0.15),
-        decoration: BoxDecoration(color: theme.accentColor.darkest),
-      ),
+    return Row(
+      children: [
+        const Expanded(child: SizedBox.shrink()),
+        Expanded(
+          flex: 2,
+          child: Divider(
+            style: DividerThemeData(
+              horizontalMargin: const EdgeInsets.symmetric(horizontal: 0),
+              decoration: BoxDecoration(color: theme.accentColor.darkest),
+            ),
+          ),
+        ),
+        const Expanded(child: SizedBox.shrink()),
+      ],
     );
-    if (width != null) {
-      return SizedBox.fromSize(
-        size: Size(width!, 1),
-        child: divider,
-      );
-    }
-    return divider;
   }
 
   @override

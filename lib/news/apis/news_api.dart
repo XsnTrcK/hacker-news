@@ -3,34 +3,100 @@
 import 'dart:convert';
 import 'package:hackernews/models/item.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hackernews/store/store.dart';
 import 'package:http/http.dart';
 import 'package:hackernews/services/config.dart' as config;
 
 abstract class NewsApi {
-  const NewsApi();
+  final Client _httpClient;
+  const NewsApi(this._httpClient);
 
   Future init();
   Future refresh(NewsType newsType);
   Future<List<TitledItem>> getNews(NewsType newsType,
       {int count = 50, int offset = 0});
-}
-
-class NewsApiRetriever implements NewsApi {
-  final Client _httpClient;
-  final Map<NewsType, List<int>> _newsIdsMap = {};
-  late Box<String>? _newsBox;
-
-  NewsApiRetriever(this._httpClient);
-
-  @override
-  Future init() async {
-    _newsBox = await Hive.openBox<String>("news");
-  }
 
   Future<Item> _getNewsItem(int id) async {
     final response = await _httpClient.get(config.getItemUri(id));
     return Item.fromJson(response.body);
+  }
+}
+
+Client? _client;
+Client get httpClient {
+  return _client ?? (_client = Client());
+}
+
+SavedArticlesRetriever? _savedArticlesRetriever;
+Future<SavedArticlesRetriever> getSavedArticlesRetriever() async {
+  if (_savedArticlesRetriever != null) return _savedArticlesRetriever!;
+  _savedArticlesRetriever = SavedArticlesRetriever(httpClient);
+  await _savedArticlesRetriever!.init();
+  return _savedArticlesRetriever!;
+}
+
+NewsApiRetriever? _newsApiRetriever;
+Future<NewsApiRetriever> getNewsApiRetriever() async {
+  if (_newsApiRetriever != null) return _newsApiRetriever!;
+  _newsApiRetriever = NewsApiRetriever(httpClient);
+  await _newsApiRetriever!.init();
+  return _newsApiRetriever!;
+}
+
+class SavedArticlesRetriever extends NewsApi {
+  late Store<Item> _store;
+  late List<int> _savedNews = [];
+  late void Function() _updateSavedNews;
+
+  SavedArticlesRetriever(Client client) : super(client);
+
+  @override
+  Future init() async {
+    final store = await getNewsStore();
+    _updateSavedNews = () => _savedNews = store.savedItems;
+    _store = store;
+    _updateSavedNews();
+  }
+
+  @override
+  Future<List<TitledItem>> getNews(NewsType newsType,
+      {int count = 50, int offset = 0}) async {
+    if (offset >= _savedNews.length) {
+      return [];
+    }
+    var endIndex = offset + count >= _savedNews.length
+        ? _savedNews.length
+        : offset + count;
+    List<TitledItem> newsToReturn = [];
+    for (; offset < endIndex; offset++) {
+      final newsId = _savedNews[offset];
+      Item? newsItem;
+      if (_store.containsKey(newsId)) {
+        newsItem = _store.get(newsId);
+      } else {
+        newsItem = await _getNewsItem(newsId);
+        _store.save(newsItem);
+      }
+      newsToReturn.add(newsItem as TitledItem);
+    }
+
+    return newsToReturn;
+  }
+
+  @override
+  Future refresh(NewsType newsType) async => _updateSavedNews();
+}
+
+class NewsApiRetriever extends NewsApi {
+  final Map<NewsType, List<int>> _newsIdsMap = {};
+  late Store<Item> _newsStore;
+
+  NewsApiRetriever(Client httpClient) : super(httpClient);
+
+  @override
+  Future init() async {
+    // Should this be refactored out?
+    _newsStore = await getNewsStore();
   }
 
   List<int> _convertNewsIds(String newsIdsJson) {
@@ -76,13 +142,11 @@ class NewsApiRetriever implements NewsApi {
     for (; offset < endIndex; offset++) {
       final newsId = _newsIdsMap[newsType]![offset];
       Item? newsItem;
-      if (_newsBox!.containsKey(newsId)) {
-        final newsString = _newsBox?.get(newsId);
-        if (newsString == null) continue;
-        newsItem = Item.fromJson(newsString);
+      if (_newsStore.containsKey(newsId)) {
+        newsItem = _newsStore.get(newsId);
       } else {
         newsItem = await _getNewsItem(newsId);
-        _newsBox!.put(newsId, jsonEncode(newsItem.toMap()));
+        _newsStore.save(newsItem);
       }
       newsToReturn.add(newsItem as TitledItem);
     }

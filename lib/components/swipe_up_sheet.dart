@@ -5,6 +5,7 @@ typedef NoContextWidgetBuilder = Widget Function();
 
 class SwipeUpSheet extends StatefulWidget {
   final Widget Function(bool) headerBuilder;
+  final NoContextWidgetBuilder extraButtonBuilder;
   final NoContextWidgetBuilder? bodyBuilder;
   final double? maxHeight;
 
@@ -12,6 +13,7 @@ class SwipeUpSheet extends StatefulWidget {
     Key? key,
     required this.headerBuilder,
     required this.bodyBuilder,
+    required this.extraButtonBuilder,
     required this.maxHeight,
   }) : super(key: key);
 
@@ -50,6 +52,27 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
     });
   }
 
+  Widget _createButtonsRow(double maxHeight) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 9,
+          child: widget.bodyBuilder != null
+              ? IconButton(
+                  icon: Icon(_isOpen
+                      ? FluentIcons.chevron_down_small
+                      : FluentIcons.chevron_up_small),
+                  onPressed: () => _handleClick(maxHeight),
+                )
+              : const SizedBox.shrink(),
+        ),
+        Expanded(
+          child: widget.extraButtonBuilder(),
+        )
+      ],
+    );
+  }
+
   Widget _createContent(double maxWidth, double maxHeight) {
     return Column(
       children: [
@@ -62,17 +85,7 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
                 child: widget.bodyBuilder!(),
               )
             : const SizedBox.shrink(),
-        widget.bodyBuilder != null
-            ? ConstrainedBox(
-                constraints: BoxConstraints(minWidth: maxWidth),
-                child: IconButton(
-                  icon: Icon(_isOpen
-                      ? FluentIcons.chevron_down_small
-                      : FluentIcons.chevron_up_small),
-                  onPressed: () => _handleClick(maxHeight),
-                ),
-              )
-            : const SizedBox.shrink(),
+        _createButtonsRow(maxHeight),
       ],
     );
   }

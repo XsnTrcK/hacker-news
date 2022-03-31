@@ -31,8 +31,8 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
       textColor: Colors.white, // TODO: Responsive to Brightness
       initiallyExpanded: _isExpanded,
       onExpansionChanged: (expanded) {
-        _commentsHandler
-            .updateComment(comment.copyWith(ItemState(isExpanded: expanded)));
+        comment.state.isExpanded = expanded;
+        _commentsHandler.updateComment(comment);
         setState(() => _isExpanded = expanded);
       },
       title: Comment(

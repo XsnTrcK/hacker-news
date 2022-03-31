@@ -16,32 +16,49 @@ extension ItemMap on Map<String, dynamic> {
   int get relatedPollId => this["poll"];
   bool get isDeleted => this["deleted"] ?? false;
   bool get isDead => this["dead"] ?? false;
-  ItemState get state => this["state"] == null
-      ? const ItemState()
-      : ItemState(isExpanded: this["state"]["isExpanded"]);
+  ItemState get state => ItemState.fromJson(this["state"]);
+  bool get isExpanded => this["isExpanded"] ?? false;
+  bool get savedForReadLater => this["savedForReadLater"] ?? false;
+  bool get hasBeenRead => this["hasBeenRead"] ?? false;
 }
 
-class ItemState extends Equatable {
-  final bool isExpanded;
-  const ItemState({this.isExpanded = true});
+class ItemState {
+  bool isExpanded;
+  bool savedForReadLater;
+  bool hasBeenRead;
 
-  Map<String, dynamic> toMap() {
-    return {"isExpanded": isExpanded};
+  ItemState({
+    this.isExpanded = true,
+    this.savedForReadLater = false,
+    this.hasBeenRead = false,
+  });
+
+  factory ItemState.fromJson(Map<String, dynamic>? stateMap) {
+    if (stateMap == null) return ItemState();
+    return ItemState(
+      isExpanded: stateMap.isExpanded,
+      savedForReadLater: stateMap.savedForReadLater,
+      hasBeenRead: stateMap.hasBeenRead,
+    );
   }
 
-  @override
-  List<Object?> get props => [isExpanded];
+  Map<String, dynamic> toMap() {
+    return {
+      "isExpanded": isExpanded,
+      "savedForReadLater": savedForReadLater,
+      "hasBeenRead": hasBeenRead,
+    };
+  }
 }
 
-abstract class Item extends Equatable {
-  final int id;
-  final int time;
-  final String createdBy;
-  final String? text;
-  final ItemState state;
+abstract class Item {
+  int id;
+  int time;
+  String createdBy;
+  String? text;
+  ItemState state;
 
-  const Item(this.id, this.time, this.createdBy,
-      {this.text, this.state = const ItemState()});
+  Item(this.id, this.time, this.createdBy, this.state, {this.text});
 
   factory Item.fromJson(String jsonString) {
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
@@ -52,6 +69,7 @@ abstract class Item extends Equatable {
             jsonMap.id,
             jsonMap.time,
             jsonMap.createdBy,
+            jsonMap.state,
             jsonMap.title,
             jsonMap.score,
             jsonMap.childrenIds,
@@ -63,6 +81,7 @@ abstract class Item extends Equatable {
             jsonMap.id,
             jsonMap.time,
             jsonMap.createdBy,
+            jsonMap.state,
             jsonMap.text,
             jsonMap.title,
             jsonMap.score,
@@ -75,6 +94,7 @@ abstract class Item extends Equatable {
           jsonMap.id,
           jsonMap.time,
           jsonMap.createdBy,
+          jsonMap.state,
           jsonMap.title,
           jsonMap.score,
           jsonMap.url,
@@ -84,6 +104,7 @@ abstract class Item extends Equatable {
           jsonMap.id,
           jsonMap.time,
           jsonMap.createdBy,
+          jsonMap.state,
           jsonMap.text,
           jsonMap.title,
           jsonMap.score,
@@ -96,18 +117,19 @@ abstract class Item extends Equatable {
           jsonMap.id,
           jsonMap.time,
           jsonMap.createdBy,
+          jsonMap.state,
           jsonMap.text,
           jsonMap.childrenIds,
           jsonMap.parentId,
           jsonMap.isDeleted,
           jsonMap.isDead,
-          jsonMap.state,
         );
       case "pollopt":
         return PollOptionItem(
           jsonMap.id,
           jsonMap.time,
           jsonMap.createdBy,
+          jsonMap.state,
           jsonMap.text,
           jsonMap.score,
           jsonMap.relatedPollId,
@@ -147,18 +169,16 @@ abstract class Item extends Equatable {
       return "Recently Posted";
     }
   }
-
-  @override
-  List<Object?> get props => [id, time, createdBy, text];
 }
 
 abstract class TitledItem extends Item {
-  final String title;
-  final int score;
+  String title;
+  int score;
 
-  const TitledItem(int id, int time, String createdBy, this.title, this.score,
+  TitledItem(int id, int time, String createdBy, ItemState state, this.title,
+      this.score,
       {String? text})
-      : super(id, time, createdBy, text: text);
+      : super(id, time, createdBy, state, text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -168,19 +188,16 @@ abstract class TitledItem extends Item {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props => super.props..addAll([title, score]);
 }
 
 abstract class ItemWithKids extends TitledItem {
-  final List<int> childrenIds;
-  final int numberOfChildren;
+  List<int> childrenIds;
+  int numberOfChildren;
 
-  const ItemWithKids(int id, int time, String createdBy, String title,
-      int score, this.childrenIds, this.numberOfChildren,
+  ItemWithKids(int id, int time, String createdBy, ItemState state,
+      String title, int score, this.childrenIds, this.numberOfChildren,
       {String? text})
-      : super(id, time, createdBy, title, score, text: text);
+      : super(id, time, createdBy, state, title, score, text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -190,18 +207,15 @@ abstract class ItemWithKids extends TitledItem {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props =>
-      super.props..addAll([childrenIds, numberOfChildren]);
 }
 
 class StoryItem extends ItemWithKids {
-  final String url;
+  String url;
 
-  const StoryItem(int id, int time, String createdBy, String title, int score,
-      List<int> childrenIds, int numberOfChildren, this.url)
-      : super(id, time, createdBy, title, score, childrenIds, numberOfChildren);
+  StoryItem(int id, int time, String createdBy, ItemState state, String title,
+      int score, List<int> childrenIds, int numberOfChildren, this.url)
+      : super(id, time, createdBy, state, title, score, childrenIds,
+            numberOfChildren);
 
   @override
   Map<String, dynamic> toMap() {
@@ -211,15 +225,13 @@ class StoryItem extends ItemWithKids {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props => super.props..add(url);
 }
 
 class AskItem extends ItemWithKids {
-  const AskItem(int id, int time, String createdBy, String? text, String title,
-      int score, List<int> childrenIds, int numberOfChildren)
-      : super(id, time, createdBy, title, score, childrenIds, numberOfChildren,
+  AskItem(int id, int time, String createdBy, ItemState state, String? text,
+      String title, int score, List<int> childrenIds, int numberOfChildren)
+      : super(id, time, createdBy, state, title, score, childrenIds,
+            numberOfChildren,
             text: text);
 
   @override
@@ -232,19 +244,21 @@ class AskItem extends ItemWithKids {
 }
 
 class PollItem extends ItemWithKids {
-  final List<int> pollOptionIds;
+  List<int> pollOptionIds;
 
-  const PollItem(
+  PollItem(
       int id,
       int time,
       String createdBy,
+      ItemState state,
       String text,
       String title,
       int score,
       List<int> childrenIds,
       int numberOfChildren,
       this.pollOptionIds)
-      : super(id, time, createdBy, title, score, childrenIds, numberOfChildren,
+      : super(id, time, createdBy, state, title, score, childrenIds,
+            numberOfChildren,
             text: text);
 
   @override
@@ -255,17 +269,14 @@ class PollItem extends ItemWithKids {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props => super.props..add(pollOptionIds);
 }
 
 class JobItem extends TitledItem {
-  final String url;
+  String url;
 
-  const JobItem(
-      int id, int time, String createdBy, String title, int score, this.url)
-      : super(id, time, createdBy, title, score);
+  JobItem(int id, int time, String createdBy, ItemState state, String title,
+      int score, this.url)
+      : super(id, time, createdBy, state, title, score);
 
   @override
   Map<String, dynamic> toMap() {
@@ -275,18 +286,15 @@ class JobItem extends TitledItem {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props => super.props..add(url);
 }
 
 class PollOptionItem extends Item {
-  final int score;
-  final int relatedPollId;
+  int score;
+  int relatedPollId;
 
-  const PollOptionItem(int id, int time, String createdBy, String text,
-      this.score, this.relatedPollId)
-      : super(id, time, createdBy, text: text);
+  PollOptionItem(int id, int time, String createdBy, ItemState state,
+      String text, this.score, this.relatedPollId)
+      : super(id, time, createdBy, state, text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -297,33 +305,17 @@ class PollOptionItem extends Item {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props => super.props..addAll([score, relatedPollId]);
 }
 
 class CommentItem extends Item {
-  final List<int> childrenIds;
-  final int parentId;
-  final bool isDeleted;
-  final bool isDead;
+  List<int> childrenIds;
+  int parentId;
+  bool isDeleted;
+  bool isDead;
 
-  const CommentItem(
-      int id,
-      int time,
-      String createdBy,
-      String text,
-      this.childrenIds,
-      this.parentId,
-      this.isDeleted,
-      this.isDead,
-      ItemState state)
-      : super(id, time, createdBy, text: text, state: state);
-
-  CommentItem copyWith(ItemState state) {
-    return CommentItem(id, time, createdBy, text!, childrenIds, parentId,
-        isDeleted, isDead, state);
-  }
+  CommentItem(int id, int time, String createdBy, ItemState state, String text,
+      this.childrenIds, this.parentId, this.isDeleted, this.isDead)
+      : super(id, time, createdBy, state, text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -336,8 +328,4 @@ class CommentItem extends Item {
 
     return jsonDict;
   }
-
-  @override
-  List<Object?> get props =>
-      super.props..addAll([childrenIds, parentId, isDeleted, isDead]);
 }

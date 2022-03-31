@@ -11,7 +11,6 @@ import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
 import 'package:hackernews/news/views/news.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:http/http.dart';
 
 extension FluentTheming on ThemeData {
   Color _applyOpacity(Color color, Set<ButtonStates> states) {
@@ -28,12 +27,15 @@ extension FluentTheming on ThemeData {
 
   ThemeData createFluentTheme(
     Color mainColor,
+    Color textColor,
     AccentColor accentColor,
     Color highlightColor,
   ) {
     return copyWith(
       accentColor: accentColor,
       scaffoldBackgroundColor: mainColor,
+      dividerTheme:
+          DividerThemeData(decoration: BoxDecoration(color: textColor)),
       navigationPaneTheme: NavigationPaneThemeData(
         backgroundColor: mainColor,
         highlightColor: highlightColor,
@@ -50,11 +52,8 @@ extension FluentTheming on ThemeData {
 
 void main() async {
   await Hive.initFlutter();
-  var httpClient = Client();
   await getCommentsHandler(client: httpClient).init();
-  var newsApi = NewsApiRetriever(httpClient);
-  await newsApi.init();
-  runApp(MyApp(newsApi));
+  runApp(MyApp(await getNewsApiRetriever()));
 }
 
 class MyApp extends StatefulWidget {
@@ -70,7 +69,7 @@ class _MyAppState extends State<MyApp> {
     return BlocProvider(
       create: (_) =>
           NewsBloc(widget._newsApi)..add(const FetchNews(NewsType.top)),
-      child: const HackerNewserNavigation(News()),
+      child: HackerNewserNavigation(const News()),
     );
   }
 
@@ -80,10 +79,10 @@ class _MyAppState extends State<MyApp> {
     final accentColor = Colors.orange;
     return FluentApp(
       title: 'Hacker Newser',
-      theme: ThemeData.light()
-          .createFluentTheme(Colors.white, accentColor, accentColor.lightest),
-      darkTheme: ThemeData.dark()
-          .createFluentTheme(Colors.black, accentColor, accentColor.darkest),
+      theme: ThemeData.light().createFluentTheme(
+          Colors.white, Colors.black, accentColor, accentColor.lightest),
+      darkTheme: ThemeData.dark().createFluentTheme(
+          Colors.black, Colors.white, accentColor, accentColor.darkest),
       themeMode: ThemeMode.system,
       home: ColorfulSafeArea(
         color: Colors.black,
