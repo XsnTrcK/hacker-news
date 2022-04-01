@@ -14,6 +14,7 @@ class CommentsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = fluent_ui.FluentTheme.of(context);
     return BlocProvider(
       create: (_) =>
           CommentsBloc(getCommentsHandler())..add(FetchComments(itemWithKids)),
@@ -22,7 +23,7 @@ class CommentsSection extends StatelessWidget {
           switch (state.status) {
             case CommentsStatus.success:
               return Material(
-                color: Colors.black,
+                color: theme.scaffoldBackgroundColor,
                 child: ListView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(horizontal: 5),

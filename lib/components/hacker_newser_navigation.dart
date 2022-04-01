@@ -1,3 +1,4 @@
+import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/components/highlight_container.dart';
@@ -56,7 +57,7 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
     }
   }
 
-  Widget _buildBottomNav(ThemeData theme) {
+  Widget _buildBottomNav() {
     return Row(
       children: [
         Expanded(
@@ -127,18 +128,25 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
     return PageView(
       controller: widget._pageController,
       onPageChanged: (index) => setState(() => _selectedIndex = index),
-      children: [const Menu(), widget.body],
+      children: [Menu(key: UniqueKey()), widget.body],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final fluentTheme = FluentTheme.of(context);
-    return Column(
-      children: [
-        Expanded(child: _createBody()),
-        _buildBottomNav(fluentTheme),
-      ],
+    final theme = FluentTheme.of(context);
+    return ScaffoldPage(
+      padding: const EdgeInsets.symmetric(vertical: 0),
+      content: ColorfulSafeArea(
+        top: false,
+        color: theme.scaffoldBackgroundColor,
+        child: Column(
+          children: [
+            Expanded(child: _createBody()),
+            _buildBottomNav(),
+          ],
+        ),
+      ),
     );
   }
 }

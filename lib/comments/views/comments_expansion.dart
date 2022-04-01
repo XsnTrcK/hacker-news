@@ -2,6 +2,8 @@ import 'package:hackernews/comments/apis/comments_api.dart';
 import 'package:hackernews/comments/views/comment.dart';
 import 'package:hackernews/models/item.dart';
 import 'package:flutter/material.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent_ui;
+import 'package:hackernews/services/theme_extensions.dart';
 
 class CommentsExpansion extends StatefulWidget {
   final int commentId;
@@ -21,14 +23,14 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
     _commentsHandler = getCommentsHandler();
   }
 
-  Widget itemBuilder(CommentItem comment) {
+  Widget itemBuilder(CommentItem comment, fluent_ui.ThemeData theme) {
     _isExpanded = comment.state.isExpanded;
     return ExpansionTile(
       expandedAlignment: Alignment.centerLeft,
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       maintainState: true,
       tilePadding: const EdgeInsets.symmetric(horizontal: 5),
-      textColor: Colors.white, // TODO: Responsive to Brightness
+      textColor: theme.textColor,
       initiallyExpanded: _isExpanded,
       onExpansionChanged: (expanded) {
         comment.state.isExpanded = expanded;
@@ -43,9 +45,9 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
           .map(
             (id) => Container(
               child: CommentsExpansion(id),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(color: Colors.white, width: 3),
+                  left: BorderSide(color: theme.textColor, width: 1),
                 ),
               ),
               margin: const EdgeInsets.only(left: 20),
@@ -57,7 +59,10 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = fluent_ui.FluentTheme.of(context);
     var comment = getCommentsHandler().getComment(widget.commentId);
-    return comment.isDeleted ? const SizedBox.shrink() : itemBuilder(comment);
+    return comment.isDeleted
+        ? const SizedBox.shrink()
+        : itemBuilder(comment, theme);
   }
 }

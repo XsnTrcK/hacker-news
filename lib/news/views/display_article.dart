@@ -1,5 +1,6 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -36,11 +37,13 @@ class DisplayArticle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var theme = FluentTheme.of(context);
     var mediaQueryData = MediaQuery.of(context);
     var maxHeight = mediaQueryData.size.height -
         mediaQueryData.padding.top -
         mediaQueryData.padding.bottom;
-    return SafeArea(
+    return ColorfulSafeArea(
+      color: theme.scaffoldBackgroundColor,
       child: BlocBuilder<ItemBloc<TitledItem>, ItemBlocState<TitledItem>>(
         builder: (context, state) {
           if (state.item != null) {

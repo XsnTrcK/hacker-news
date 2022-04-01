@@ -3,6 +3,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/components/custom_text.dart';
 import 'package:hackernews/models/item.dart';
+import 'package:hackernews/services/theme_extensions.dart';
 
 class Comment extends StatefulWidget {
   final CommentItem commentItem;
@@ -33,7 +34,7 @@ class _CommentState extends State<Comment> {
     _isExpanded = widget.isExpanded;
   }
 
-  Widget itemBuilder(CommentItem comment) {
+  Widget itemBuilder(CommentItem comment, ThemeData theme) {
     return Column(
       children: [
         CustomText(
@@ -47,7 +48,8 @@ class _CommentState extends State<Comment> {
                 visible: _isExpanded,
                 child: Html(
                   data: comment.text,
-                  customTextStyle: (_, __) => const TextStyle(fontSize: 10),
+                  customTextStyle: (_, __) =>
+                      TextStyle(fontSize: 10, color: theme.textColor),
                 ),
               ),
       ],
@@ -56,6 +58,7 @@ class _CommentState extends State<Comment> {
 
   @override
   Widget build(BuildContext context) {
-    return itemBuilder(widget.commentItem);
+    final theme = FluentTheme.of(context);
+    return itemBuilder(widget.commentItem, theme);
   }
 }

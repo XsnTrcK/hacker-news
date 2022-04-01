@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:hackernews/services/theme_extensions.dart';
 
 class CustomText extends StatelessWidget {
   final String text;
@@ -20,6 +21,7 @@ class CustomText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FluentTheme.of(context);
     return Padding(
       padding: padding,
       child: Align(
@@ -27,7 +29,7 @@ class CustomText extends StatelessWidget {
         child: Text(
           text,
           overflow: overflow,
-          style: style,
+          style: style.merge(TextStyle(color: theme.textColor)),
         ),
       ),
     );
