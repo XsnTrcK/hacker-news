@@ -42,38 +42,41 @@ class DisplayArticle extends StatelessWidget {
     var maxHeight = mediaQueryData.size.height -
         mediaQueryData.padding.top -
         mediaQueryData.padding.bottom;
-    return ColorfulSafeArea(
-      color: theme.scaffoldBackgroundColor,
-      child: BlocBuilder<ItemBloc<TitledItem>, ItemBlocState<TitledItem>>(
-        builder: (context, state) {
-          if (state.item != null) {
-            return Column(
-              children: [
-                Expanded(child: _createDisplayDetails(state.item!)),
-                SwipeUpSheet(
-                  maxHeight: maxHeight,
-                  headerBuilder: (minimal) => ItemDetails(state.item!,
-                      minimalTitle: minimal, expand: false),
-                  extraButtonBuilder: () => IconButton(
-                    icon: Icon(state.item!.state.savedForReadLater
-                        ? FluentIcons.single_bookmark_solid
-                        : FluentIcons.single_bookmark),
-                    onPressed: () {
-                      context
-                          .read<ItemBloc<TitledItem>>()
-                          .add(SaveToReadLaterEvent(state.item!));
-                    },
+    return ScaffoldPage(
+      padding: const EdgeInsets.symmetric(vertical: 0),
+      content: ColorfulSafeArea(
+        color: theme.scaffoldBackgroundColor,
+        child: BlocBuilder<ItemBloc<TitledItem>, ItemBlocState<TitledItem>>(
+          builder: (context, state) {
+            if (state.item != null) {
+              return Column(
+                children: [
+                  Expanded(child: _createDisplayDetails(state.item!)),
+                  SwipeUpSheet(
+                    maxHeight: maxHeight,
+                    headerBuilder: (minimal) => ItemDetails(state.item!,
+                        minimalTitle: minimal, expand: false),
+                    extraButtonBuilder: () => IconButton(
+                      icon: Icon(state.item!.state.savedForReadLater
+                          ? FluentIcons.single_bookmark_solid
+                          : FluentIcons.single_bookmark),
+                      onPressed: () {
+                        context
+                            .read<ItemBloc<TitledItem>>()
+                            .add(SaveToReadLaterEvent(state.item!));
+                      },
+                    ),
+                    bodyBuilder: state.item is ItemWithKids
+                        ? () => CommentsSection((state.item as ItemWithKids))
+                        : null,
                   ),
-                  bodyBuilder: state.item is ItemWithKids
-                      ? () => CommentsSection((state.item as ItemWithKids))
-                      : null,
-                ),
-              ],
-            );
-          } else {
-            return const Center(child: ProgressBar());
-          }
-        },
+                ],
+              );
+            } else {
+              return const Center(child: ProgressBar());
+            }
+          },
+        ),
       ),
     );
   }
