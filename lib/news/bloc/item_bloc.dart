@@ -15,6 +15,8 @@ class ItemBloc<T extends Item>
     on<SaveToReadLaterEvent<T>>(_onSaveToReadLater,
         transformer: throttleDroppable());
     on<HasBeenReadEvent<T>>(_onHasBeenRead, transformer: throttleDroppable());
+    on<DisplayReaderModeEvent<T>>(_onDisplayReaderMode,
+        transformer: throttleDroppable());
   }
 
   void _onSaveToReadLater(
@@ -31,6 +33,16 @@ class ItemBloc<T extends Item>
       HasBeenReadEvent<T> event, Emitter<ItemBlocState<T>> emit) {
     try {
       final updatedItem = _itemUpdater.markHasBeenRead(event.item);
+      emit(ItemBlocState<T>(item: updatedItem));
+    } catch (error) {
+      log("Error: $error");
+    }
+  }
+
+  void _onDisplayReaderMode(
+      DisplayReaderModeEvent<T> event, Emitter<ItemBlocState<T>> emit) {
+    try {
+      final updatedItem = _itemUpdater.displayReaderMode(event.item);
       emit(ItemBlocState<T>(item: updatedItem));
     } catch (error) {
       log("Error: $error");

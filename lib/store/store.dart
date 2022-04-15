@@ -17,6 +17,7 @@ abstract class ItemUpdater<T> {
 
   T saveToReadLater(T item);
   T markHasBeenRead(T item);
+  T displayReaderMode(T item);
 }
 
 NewsStore? _newsStore;
@@ -74,6 +75,13 @@ class NewsStore extends Store<Item> with ItemUpdater<Item> {
       savedItems.remove(item.id);
     }
     _newsBox.put(_savedItemsKey, jsonEncode(savedItems));
+    return item;
+  }
+
+  @override
+  Item displayReaderMode(Item item) {
+    item.state.displayReaderMode = !item.state.displayReaderMode;
+    save(item);
     return item;
   }
 }

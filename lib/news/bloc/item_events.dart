@@ -12,3 +12,7 @@ class SaveToReadLaterEvent<T extends Item> extends ItemEvent<T> {
 class HasBeenReadEvent<T extends Item> extends ItemEvent<T> {
   const HasBeenReadEvent(T item) : super(item);
 }
+
+class DisplayReaderModeEvent<T extends Item> extends ItemEvent<T> {
+  const DisplayReaderModeEvent(T item) : super(item);
+}

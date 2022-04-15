@@ -5,15 +5,17 @@ typedef NoContextWidgetBuilder = Widget Function();
 
 class SwipeUpSheet extends StatefulWidget {
   final Widget Function(bool) headerBuilder;
-  final NoContextWidgetBuilder extraButtonBuilder;
+  final NoContextWidgetBuilder postButtonRowBuilder;
+  final NoContextWidgetBuilder? preButtonRowBuilder;
   final NoContextWidgetBuilder? bodyBuilder;
   final double? maxHeight;
 
   const SwipeUpSheet({
     Key? key,
+    this.preButtonRowBuilder,
+    this.bodyBuilder,
     required this.headerBuilder,
-    required this.bodyBuilder,
-    required this.extraButtonBuilder,
+    required this.postButtonRowBuilder,
     required this.maxHeight,
   }) : super(key: key);
 
@@ -53,10 +55,13 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
   }
 
   Widget _createButtonsRow(double maxHeight) {
+    final mainFlex = widget.preButtonRowBuilder != null ? 8 : 9;
     return Row(
       children: [
+        if (widget.preButtonRowBuilder != null)
+          Expanded(child: widget.preButtonRowBuilder!()),
         Expanded(
-          flex: 9,
+          flex: mainFlex,
           child: widget.bodyBuilder != null
               ? IconButton(
                   icon: Icon(_isOpen
@@ -67,7 +72,7 @@ class _SwipeUpSheetState extends State<SwipeUpSheet> {
               : const SizedBox.shrink(),
         ),
         Expanded(
-          child: widget.extraButtonBuilder(),
+          child: widget.postButtonRowBuilder(),
         )
       ],
     );

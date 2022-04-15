@@ -18,7 +18,7 @@ class DisplayArticle extends StatelessWidget {
 
   Widget _createDisplayDetails(TitledItem item) {
     if (item is StoryItem) {
-      return WebView(item.url);
+      return WebView(item.url, item.state.displayReaderMode);
     } else {
       return Column(
         children: [
@@ -56,7 +56,17 @@ class DisplayArticle extends StatelessWidget {
                     maxHeight: maxHeight,
                     headerBuilder: (minimal) => ItemDetails(state.item!,
                         minimalTitle: minimal, expand: false),
-                    extraButtonBuilder: () => IconButton(
+                    preButtonRowBuilder: () => IconButton(
+                      icon: Icon(state.item!.state.displayReaderMode
+                          ? FluentIcons.reading_mode_solid
+                          : FluentIcons.reading_mode),
+                      onPressed: () {
+                        context
+                            .read<ItemBloc<TitledItem>>()
+                            .add(DisplayReaderModeEvent(state.item!));
+                      },
+                    ),
+                    postButtonRowBuilder: () => IconButton(
                       icon: Icon(state.item!.state.savedForReadLater
                           ? FluentIcons.single_bookmark_solid
                           : FluentIcons.single_bookmark),
