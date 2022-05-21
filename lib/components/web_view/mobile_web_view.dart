@@ -36,12 +36,13 @@ class _MobileWebViewState extends State<MobileWebView> {
   }
 
   // TODO: Move to separate class?
-  Future _getSimplifiedHtml() async {
+  Future _getSimplifiedHtml(void Function(String html) updateController) async {
     // Check for class news-article--content--body
     var tempHtml = await _runJs(
         "window.document.getElementsByClassName('news-article--content--body')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -50,6 +51,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByClassName('body-content')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -58,6 +60,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByClassName('article')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -66,6 +69,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByTagName('article')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -74,6 +78,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByClassName('content')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -82,6 +87,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         await _runJs("window.document.getElementById('content').innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -90,6 +96,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByTagName('main')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
 
@@ -98,6 +105,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         await _runJs("window.document.getElementById('theContent').innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
+      updateController(_downloadedHtml);
       return;
     }
   }
@@ -112,7 +120,11 @@ class _MobileWebViewState extends State<MobileWebView> {
   @override
   void didUpdateWidget(covariant MobileWebView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_downloadedHtml.isNotEmpty && widget._displayReaderMode) {
+    if (oldWidget._displayReaderMode == widget._displayReaderMode ||
+        _downloadedHtml.isEmpty) {
+      return;
+    }
+    if (widget._displayReaderMode) {
       _controller.loadHtmlString(
           "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}",
           baseUrl: widget.url);
@@ -133,14 +145,16 @@ class _MobileWebViewState extends State<MobileWebView> {
           backgroundColor: theme.scaffoldBackgroundColor,
           onPageFinished: (_) async {
             if (!_isLoading) return;
-            await _getSimplifiedHtml();
-            setState(() {
-              _isLoading = false;
-              if (_downloadedHtml.isNotEmpty && widget._displayReaderMode) {
+            setState(() => _isLoading = false);
+            _getSimplifiedHtml((html) {
+              if (!widget._displayReaderMode) {
+                return;
+              }
+              setState(() {
                 _controller.loadHtmlString(
                     "${theme.readerViewStyle}${_removeUnwantedHtml(_downloadedHtml)}",
                     baseUrl: widget.url);
-              }
+              });
             });
           },
           onWebViewCreated: (WebViewController webViewController) {

@@ -11,7 +11,7 @@ CommentsApiRetriever? _commentsApi;
 abstract class CommentsHandler {
   const CommentsHandler();
 
-  Future init();
+  Future init({bool deleteBox});
   Future<List<CommentItem>> fetchComments(ItemWithKids itemWithKids);
   CommentItem getComment(int commentId);
   void updateComment(CommentItem comment);
@@ -24,8 +24,11 @@ class CommentsApiRetriever implements CommentsHandler {
   CommentsApiRetriever(this._httpClient);
 
   @override
-  Future init() async {
+  Future init({bool deleteBox = false}) async {
     _commentsBox = await Hive.openBox<String>("comments");
+    if (deleteBox) {
+      _commentsBox.deleteFromDisk();
+    }
   }
 
   Future<CommentItem> _downloadComment(int commentId) async {

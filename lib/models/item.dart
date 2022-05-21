@@ -33,7 +33,7 @@ class ItemState {
     this.isExpanded = true,
     this.savedForReadLater = false,
     this.hasBeenRead = false,
-    this.displayReaderMode = true,
+    this.displayReaderMode = false,
   });
 
   factory ItemState.fromJson(Map<String, dynamic>? stateMap) {

@@ -6,14 +6,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/comments/views/comments_section.dart';
 import 'package:hackernews/components/item_details.dart';
-import 'package:hackernews/components/swipe_up_sheet.dart';
 import 'package:hackernews/components/web_view/web_view.dart';
 import 'package:hackernews/models/item.dart';
 import 'package:hackernews/news/bloc/item_bloc.dart';
 import 'package:hackernews/news/bloc/item_events.dart';
 import 'package:hackernews/news/bloc/item_state.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class DisplayArticle extends StatelessWidget {
+  static final PanelController _panelController = PanelController();
+
   const DisplayArticle({Key? key}) : super(key: key);
 
   Widget _createDisplayDetails(TitledItem item) {
@@ -35,6 +37,68 @@ class DisplayArticle extends StatelessWidget {
     }
   }
 
+  Widget _createButtonsRow(
+      TitledItem item, BuildContext context, bool collapsed) {
+    return Row(
+      children: [
+        Expanded(
+            child: IconButton(
+          icon: Icon(item.state.displayReaderMode
+              ? FluentIcons.reading_mode_solid
+              : FluentIcons.reading_mode),
+          onPressed: () {
+            context
+                .read<ItemBloc<TitledItem>>()
+                .add(DisplayReaderModeEvent(item));
+          },
+        )),
+        Expanded(
+          flex: 8,
+          child: item is ItemWithKids
+              ? IconButton(
+                  icon: Icon(collapsed
+                      ? FluentIcons.chevron_up_small
+                      : FluentIcons.chevron_down_small),
+                  onPressed: () => collapsed
+                      ? _panelController.open()
+                      : _panelController.close(),
+                )
+              : const SizedBox.shrink(),
+        ),
+        Expanded(
+          child: IconButton(
+            icon: Icon(item.state.savedForReadLater
+                ? FluentIcons.single_bookmark_solid
+                : FluentIcons.single_bookmark),
+            onPressed: () {
+              context
+                  .read<ItemBloc<TitledItem>>()
+                  .add(SaveToReadLaterEvent(item));
+            },
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _createSlideView(
+      TitledItem item, BuildContext context, bool collapsed) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: ItemDetails(item, minimalTitle: collapsed, expand: false),
+        ),
+        !collapsed
+            ? item is ItemWithKids
+                ? Expanded(child: CommentsSection(item))
+                : const SizedBox.shrink()
+            : const SizedBox.shrink(),
+        _createButtonsRow(item, context, collapsed),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     var theme = FluentTheme.of(context);
@@ -49,38 +113,29 @@ class DisplayArticle extends StatelessWidget {
         child: BlocBuilder<ItemBloc<TitledItem>, ItemBlocState<TitledItem>>(
           builder: (context, state) {
             if (state.item != null) {
-              return Column(
-                children: [
-                  Expanded(child: _createDisplayDetails(state.item!)),
-                  SwipeUpSheet(
-                    maxHeight: maxHeight,
-                    headerBuilder: (minimal) => ItemDetails(state.item!,
-                        minimalTitle: minimal, expand: false),
-                    preButtonRowBuilder: () => IconButton(
-                      icon: Icon(state.item!.state.displayReaderMode
-                          ? FluentIcons.reading_mode_solid
-                          : FluentIcons.reading_mode),
-                      onPressed: () {
-                        context
-                            .read<ItemBloc<TitledItem>>()
-                            .add(DisplayReaderModeEvent(state.item!));
-                      },
-                    ),
-                    postButtonRowBuilder: () => IconButton(
-                      icon: Icon(state.item!.state.savedForReadLater
-                          ? FluentIcons.single_bookmark_solid
-                          : FluentIcons.single_bookmark),
-                      onPressed: () {
-                        context
-                            .read<ItemBloc<TitledItem>>()
-                            .add(SaveToReadLaterEvent(state.item!));
-                      },
-                    ),
-                    bodyBuilder: state.item is ItemWithKids
-                        ? () => CommentsSection((state.item as ItemWithKids))
-                        : null,
-                  ),
-                ],
+              return SlidingUpPanel(
+                controller: _panelController,
+                onPanelOpened: () {
+                  if (!_panelController.isPanelOpen) {
+                    _panelController.open();
+                  }
+                },
+                onPanelClosed: () {
+                  if (!_panelController.isPanelClosed) {
+                    _panelController.close();
+                  }
+                },
+                maxHeight: maxHeight,
+                minHeight: 76,
+                body: _createDisplayDetails(state.item!),
+                collapsed: Container(
+                  color: theme.scaffoldBackgroundColor,
+                  child: _createSlideView(state.item!, context, true),
+                ),
+                panel: Container(
+                  color: theme.scaffoldBackgroundColor,
+                  child: _createSlideView(state.item!, context, false),
+                ),
               );
             } else {
               return const Center(child: ProgressBar());

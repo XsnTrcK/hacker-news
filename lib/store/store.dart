@@ -21,20 +21,24 @@ abstract class ItemUpdater<T> {
 }
 
 NewsStore? _newsStore;
-Future<NewsStore> getNewsStore() async {
+Future<NewsStore> getNewsStore({bool deleteBox = false}) async {
   if (_newsStore != null) return _newsStore!;
   _newsStore = NewsStore();
-  await _newsStore!.init();
+  await _newsStore!.init(deleteBox: deleteBox);
   return _newsStore!;
 }
 
 class NewsStore extends Store<Item> with ItemUpdater<Item> {
   late Box<String> _newsBox;
 
-  Future init() async {
+  Future init({bool deleteBox = false}) async {
     _newsBox = await Hive.openBox<String>("news");
     savedItems =
         (jsonDecode(_newsBox.get(_savedItemsKey) ?? "[]") as List).cast<int>();
+
+    if (deleteBox) {
+      _newsBox.deleteFromDisk();
+    }
   }
 
   @override

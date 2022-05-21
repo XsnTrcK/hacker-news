@@ -36,10 +36,10 @@ Future<SavedArticlesRetriever> getSavedArticlesRetriever() async {
 }
 
 NewsApiRetriever? _newsApiRetriever;
-Future<NewsApiRetriever> getNewsApiRetriever() async {
+Future<NewsApiRetriever> getNewsApiRetriever({bool deleteBox = false}) async {
   if (_newsApiRetriever != null) return _newsApiRetriever!;
   _newsApiRetriever = NewsApiRetriever(httpClient);
-  await _newsApiRetriever!.init();
+  await _newsApiRetriever!.init(deleteBox: deleteBox);
   return _newsApiRetriever!;
 }
 
@@ -94,9 +94,9 @@ class NewsApiRetriever extends NewsApi {
   NewsApiRetriever(Client httpClient) : super(httpClient);
 
   @override
-  Future init() async {
+  Future init({bool deleteBox = false}) async {
     // Should this be refactored out?
-    _newsStore = await getNewsStore();
+    _newsStore = await getNewsStore(deleteBox: deleteBox);
   }
 
   List<int> _convertNewsIds(String newsIdsJson) {
