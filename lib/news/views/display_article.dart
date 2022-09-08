@@ -2,6 +2,7 @@
 
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/comments/views/comments_section.dart';
@@ -13,12 +14,20 @@ import 'package:hackernews/news/bloc/item_events.dart';
 import 'package:hackernews/news/bloc/item_state.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-class DisplayArticle extends StatelessWidget {
+class DisplayArticle extends StatefulWidget {
   static final PanelController _panelController = PanelController();
 
   const DisplayArticle({Key? key}) : super(key: key);
 
-  Widget _createDisplayDetails(TitledItem item) {
+  @override
+  State<DisplayArticle> createState() => _DisplayArticle();
+}
+
+class _DisplayArticle extends State<DisplayArticle> {
+  final GlobalKey<State<DisplayArticle>> _collapsedKey = GlobalKey();
+  Size _collapsedSize = const Size(0, 0);
+
+  Widget _createDisplayDetails(TitledItem item, double bottomPadding) {
     if (item is StoryItem) {
       return WebView(item.url, item.state.displayReaderMode);
     } else {
@@ -60,8 +69,8 @@ class DisplayArticle extends StatelessWidget {
                       ? FluentIcons.chevron_up_small
                       : FluentIcons.chevron_down_small),
                   onPressed: () => collapsed
-                      ? _panelController.open()
-                      : _panelController.close(),
+                      ? DisplayArticle._panelController.open()
+                      : DisplayArticle._panelController.close(),
                 )
               : const SizedBox.shrink(),
         ),
@@ -99,6 +108,18 @@ class DisplayArticle extends StatelessWidget {
     );
   }
 
+  void _postFrameCallback(_) {
+    var context = _collapsedKey.currentContext;
+    if (context == null) return;
+
+    var newSize = context.size;
+    if (_collapsedSize == newSize) return;
+
+    setState(() {
+      _collapsedSize = newSize!;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var theme = FluentTheme.of(context);
@@ -113,22 +134,32 @@ class DisplayArticle extends StatelessWidget {
         child: BlocBuilder<ItemBloc<TitledItem>, ItemBlocState<TitledItem>>(
           builder: (context, state) {
             if (state.item != null) {
+              SchedulerBinding.instance
+                  .addPostFrameCallback(_postFrameCallback);
               return SlidingUpPanel(
-                controller: _panelController,
+                controller: DisplayArticle._panelController,
                 onPanelOpened: () {
-                  if (!_panelController.isPanelOpen) {
-                    _panelController.open();
+                  if (!DisplayArticle._panelController.isPanelOpen) {
+                    DisplayArticle._panelController.open();
                   }
                 },
                 onPanelClosed: () {
-                  if (!_panelController.isPanelClosed) {
-                    _panelController.close();
+                  if (!DisplayArticle._panelController.isPanelClosed) {
+                    DisplayArticle._panelController.close();
                   }
                 },
                 maxHeight: maxHeight,
                 minHeight: 76,
-                body: _createDisplayDetails(state.item!),
+                body: Padding(
+                  padding: EdgeInsets.only(
+                      bottom: _collapsedSize.height +
+                          mediaQueryData.padding.top +
+                          mediaQueryData.padding.bottom),
+                  child:
+                      _createDisplayDetails(state.item!, _collapsedSize.height),
+                ),
                 collapsed: Container(
+                  key: _collapsedKey,
                   color: theme.scaffoldBackgroundColor,
                   child: _createSlideView(state.item!, context, true),
                 ),
