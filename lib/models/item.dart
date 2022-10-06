@@ -71,16 +71,16 @@ abstract class Item {
       case "story":
         if (jsonMap.containsKey("url")) {
           return StoryItem(
-            jsonMap.id,
-            jsonMap.time,
-            jsonMap.createdBy,
-            jsonMap.state,
-            jsonMap.title,
-            jsonMap.score,
-            jsonMap.childrenIds,
-            jsonMap.numberOfChildren,
-            jsonMap.url,
-          );
+              jsonMap.id,
+              jsonMap.time,
+              jsonMap.createdBy,
+              jsonMap.state,
+              jsonMap.title,
+              jsonMap.score,
+              jsonMap.childrenIds,
+              jsonMap.numberOfChildren,
+              jsonMap.url,
+              text: jsonMap.text);
         } else {
           return AskItem(
             jsonMap.id,
@@ -218,9 +218,11 @@ class StoryItem extends ItemWithKids {
   String url;
 
   StoryItem(int id, int time, String createdBy, ItemState state, String title,
-      int score, List<int> childrenIds, int numberOfChildren, this.url)
+      int score, List<int> childrenIds, int numberOfChildren, this.url,
+      {String? text})
       : super(id, time, createdBy, state, title, score, childrenIds,
-            numberOfChildren);
+            numberOfChildren,
+            text: text);
 
   @override
   Map<String, dynamic> toMap() {

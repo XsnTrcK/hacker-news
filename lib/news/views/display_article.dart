@@ -27,25 +27,6 @@ class _DisplayArticle extends State<DisplayArticle> {
   final GlobalKey<State<DisplayArticle>> _collapsedKey = GlobalKey();
   Size _collapsedSize = const Size(0, 0);
 
-  Widget _createDisplayDetails(TitledItem item, double bottomPadding) {
-    if (item is StoryItem) {
-      return WebView(item.url, item.state.displayReaderMode);
-    } else {
-      return Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Html(
-                padding: const EdgeInsets.symmetric(horizontal: 5),
-                data: item.text ?? item.title,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-  }
-
   Widget _createButtonsRow(
       TitledItem item, BuildContext context, bool collapsed) {
     return Row(
@@ -63,7 +44,7 @@ class _DisplayArticle extends State<DisplayArticle> {
         )),
         Expanded(
           flex: 8,
-          child: item is ItemWithKids
+          child: item is ItemWithKids && item is StoryItem
               ? IconButton(
                   icon: Icon(collapsed
                       ? FluentIcons.chevron_up_small
@@ -90,7 +71,27 @@ class _DisplayArticle extends State<DisplayArticle> {
     );
   }
 
-  Widget _createSlideView(
+  Widget? _createInfo(TitledItem item) {
+    var textHtml = item.text != null
+        ? SingleChildScrollView(
+            child: Html(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              data: item.text,
+            ),
+          )
+        : null;
+    if (item is ItemWithKids) {
+      return Expanded(
+        child: CommentsSection(
+          item,
+          startWidget: textHtml,
+        ),
+      );
+    }
+    return textHtml;
+  }
+
+  Widget _createInfoSection(
       TitledItem item, BuildContext context, bool collapsed) {
     return Column(
       children: [
@@ -99,9 +100,7 @@ class _DisplayArticle extends State<DisplayArticle> {
           child: ItemDetails(item, minimalTitle: collapsed, expand: false),
         ),
         !collapsed
-            ? item is ItemWithKids
-                ? Expanded(child: CommentsSection(item))
-                : const SizedBox.shrink()
+            ? _createInfo(item) ?? const SizedBox.shrink()
             : const SizedBox.shrink(),
         _createButtonsRow(item, context, collapsed),
       ],
@@ -134,39 +133,46 @@ class _DisplayArticle extends State<DisplayArticle> {
         child: BlocBuilder<ItemBloc<TitledItem>, ItemBlocState<TitledItem>>(
           builder: (context, state) {
             if (state.item != null) {
-              SchedulerBinding.instance
-                  .addPostFrameCallback(_postFrameCallback);
-              return SlidingUpPanel(
-                controller: DisplayArticle._panelController,
-                onPanelOpened: () {
-                  if (!DisplayArticle._panelController.isPanelOpen) {
-                    DisplayArticle._panelController.open();
-                  }
-                },
-                onPanelClosed: () {
-                  if (!DisplayArticle._panelController.isPanelClosed) {
-                    DisplayArticle._panelController.close();
-                  }
-                },
-                maxHeight: maxHeight,
-                minHeight: 76,
-                body: Padding(
-                  padding: EdgeInsets.only(
-                      bottom: _collapsedSize.height +
-                          mediaQueryData.padding.top +
-                          mediaQueryData.padding.bottom),
-                  child:
-                      _createDisplayDetails(state.item!, _collapsedSize.height),
-                ),
-                collapsed: Container(
-                  key: _collapsedKey,
-                  color: theme.scaffoldBackgroundColor,
-                  child: _createSlideView(state.item!, context, true),
-                ),
-                panel: Container(
-                  color: theme.scaffoldBackgroundColor,
-                  child: _createSlideView(state.item!, context, false),
-                ),
+              if (state.item is StoryItem) {
+                SchedulerBinding.instance
+                    .addPostFrameCallback(_postFrameCallback);
+                var storyItem = state.item as StoryItem;
+                return SlidingUpPanel(
+                  controller: DisplayArticle._panelController,
+                  onPanelOpened: () {
+                    if (!DisplayArticle._panelController.isPanelOpen) {
+                      DisplayArticle._panelController.open();
+                    }
+                  },
+                  onPanelClosed: () {
+                    if (!DisplayArticle._panelController.isPanelClosed) {
+                      DisplayArticle._panelController.close();
+                    }
+                  },
+                  maxHeight: maxHeight,
+                  minHeight: 76,
+                  body: Padding(
+                    padding: EdgeInsets.only(
+                        bottom: _collapsedSize.height +
+                            mediaQueryData.padding.top +
+                            mediaQueryData.padding.bottom),
+                    child: WebView(
+                        storyItem.url, storyItem.state.displayReaderMode),
+                  ),
+                  collapsed: Container(
+                    key: _collapsedKey,
+                    color: theme.scaffoldBackgroundColor,
+                    child: _createInfoSection(storyItem, context, true),
+                  ),
+                  panel: Container(
+                    color: theme.scaffoldBackgroundColor,
+                    child: _createInfoSection(storyItem, context, false),
+                  ),
+                );
+              }
+              return SizedBox(
+                height: maxHeight,
+                child: _createInfoSection(state.item!, context, false),
               );
             } else {
               return const Center(child: ProgressBar());

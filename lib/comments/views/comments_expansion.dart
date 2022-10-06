@@ -44,13 +44,13 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
       children: comment.childrenIds
           .map(
             (id) => Container(
-              child: CommentsExpansion(id),
               decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(color: theme.textColor, width: 1),
                 ),
               ),
               margin: const EdgeInsets.only(left: 20),
+              child: CommentsExpansion(id),
             ),
           )
           .toList(),
