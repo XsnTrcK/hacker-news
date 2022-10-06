@@ -10,7 +10,9 @@ import 'package:hackernews/models/item.dart';
 
 class CommentsSection extends StatelessWidget {
   final ItemWithKids itemWithKids;
-  const CommentsSection(this.itemWithKids, {Key? key}) : super(key: key);
+  final Widget? startWidget;
+  const CommentsSection(this.itemWithKids, {Key? key, this.startWidget})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -22,15 +24,18 @@ class CommentsSection extends StatelessWidget {
         builder: (context, state) {
           switch (state.status) {
             case CommentsStatus.success:
+              final commentWidgets = state.comments!
+                  .map((comment) =>
+                      CommentsExpansion(comment.id, key: ValueKey(comment.id)))
+                  .toList();
               return Material(
                 color: theme.scaffoldBackgroundColor,
                 child: ListView(
                   shrinkWrap: true,
                   padding: const EdgeInsets.symmetric(horizontal: 5),
-                  children: state.comments!
-                      .map((comment) => CommentsExpansion(comment.id,
-                          key: ValueKey(comment.id)))
-                      .toList(),
+                  children: startWidget == null
+                      ? commentWidgets
+                      : [startWidget!, ...commentWidgets],
                 ),
               );
             case CommentsStatus.failure:
