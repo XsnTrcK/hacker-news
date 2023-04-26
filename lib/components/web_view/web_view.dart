@@ -6,14 +6,20 @@ import 'package:fluent_ui/fluent_ui.dart';
 class WebView extends StatelessWidget {
   final String url;
   final bool _displayReaderMode;
+  final Future<void> Function(String)? handleOverscroll;
 
-  const WebView(this.url, this._displayReaderMode, {Key? key})
+  const WebView(this.url, this._displayReaderMode,
+      {Key? key, this.handleOverscroll})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Platform.isWindows
         ? WindowsWebView(url)
-        : MobileWebView(url, _displayReaderMode);
+        : MobileWebView(
+            url,
+            _displayReaderMode,
+            handleOverscroll: handleOverscroll,
+          );
   }
 }

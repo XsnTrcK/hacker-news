@@ -9,15 +9,30 @@ import 'package:hackernews/store/store.dart';
 class ViewArticles extends StatelessWidget {
   final List<TitledItem> _articles;
   final int? initialIndex;
+  late PageController _pageController;
 
-  const ViewArticles(this._articles, {Key? key, this.initialIndex})
-      : super(key: key);
+  ViewArticles(this._articles, {Key? key, this.initialIndex})
+      : super(key: key) {
+    _pageController = PageController(initialPage: initialIndex ?? 0);
+  }
 
   Widget _buildPage(ItemUpdater itemUpdater, TitledItem item) {
     return BlocProvider(
       create: (_) =>
           ItemBloc<TitledItem>(itemUpdater)..add(HasBeenReadEvent(item)),
-      child: const DisplayArticle(),
+      child: DisplayArticle(
+        handleOverscroll: (overscroll) async {
+          if (overscroll == 'nextPage') {
+            await _pageController.nextPage(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.fastOutSlowIn);
+          } else if (overscroll == 'previousPage') {
+            await _pageController.previousPage(
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.fastOutSlowIn);
+          }
+        },
+      ),
     );
   }
 
@@ -28,7 +43,7 @@ class ViewArticles extends StatelessWidget {
       builder: (context, AsyncSnapshot<NewsStore> snapshot) {
         if (snapshot.hasData) {
           return PageView.builder(
-            controller: PageController(initialPage: initialIndex ?? 0),
+            controller: _pageController,
             itemCount: _articles.length,
             itemBuilder: (context, index) {
               return _buildPage(snapshot.data!, _articles[index]);

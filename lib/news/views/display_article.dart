@@ -16,8 +16,9 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class DisplayArticle extends StatefulWidget {
   static final PanelController _panelController = PanelController();
+  final Future<void> Function(String)? handleOverscroll;
 
-  const DisplayArticle({Key? key}) : super(key: key);
+  const DisplayArticle({Key? key, this.handleOverscroll}) : super(key: key);
 
   @override
   State<DisplayArticle> createState() => _DisplayArticle();
@@ -157,7 +158,10 @@ class _DisplayArticle extends State<DisplayArticle> {
                             mediaQueryData.padding.top +
                             mediaQueryData.padding.bottom),
                     child: WebView(
-                        storyItem.url, storyItem.state.displayReaderMode),
+                      storyItem.url,
+                      storyItem.state.displayReaderMode,
+                      handleOverscroll: widget.handleOverscroll,
+                    ),
                   ),
                   collapsed: Container(
                     key: _collapsedKey,

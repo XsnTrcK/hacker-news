@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 0.7.0+1
+version: 0.8.0+1
 
 environment:
   sdk: ">=2.16.0 <3.0.0"
@@ -34,10 +34,10 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  fluent_ui: ^3.8.0
+  fluent_ui: ^4.4.2
   flutter_link_preview: ^1.5.6
   cached_network_image: ^2.5.1
-  webview_flutter: ^3.0.0
+  webview_flutter: ^4.0.7
   webview_windows: ^0.2.1
   flutter_html: ^0.11.1
   http: ^0.12.2
@@ -49,7 +49,7 @@ dependencies:
   stream_transform: ^2.0.0
   bloc_concurrency: ^0.2.0
   mdi: ^4.0.0
-  colorful_safe_area: ^0.3.0
+  colorful_safe_area: ^1.0.0
   sliding_up_panel: ^2.0.0+1
 
 dev_dependencies:
@@ -62,7 +62,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.1
-  flutter_launcher_icons: ^0.10.0
+  flutter_launcher_icons: ^0.11.0
 
 flutter_icons:
   android: true
