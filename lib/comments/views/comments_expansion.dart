@@ -23,7 +23,7 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
     _commentsHandler = getCommentsHandler();
   }
 
-  Widget itemBuilder(CommentItem comment, fluent_ui.ThemeData theme) {
+  Widget itemBuilder(CommentItem comment, fluent_ui.FluentThemeData theme) {
     _isExpanded = comment.state.isExpanded;
     return ExpansionTile(
       expandedAlignment: Alignment.centerLeft,

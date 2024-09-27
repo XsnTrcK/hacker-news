@@ -4,12 +4,12 @@ import 'package:equatable/equatable.dart';
 extension ItemMap on Map<String, dynamic> {
   int get id => this["id"];
   int get time => this["time"];
-  String get createdBy => this["by"];
+  String get createdBy => this["by"] ?? "";
   String get title => this["title"];
   int get score => this["score"];
   List<int> get childrenIds => this["kids"]?.cast<int>() ?? [];
   int get numberOfChildren => this["descendants"];
-  String get url => this["url"];
+  String get url => this["url"] ?? '';
   String get text => this["text"] ?? '';
   List<int> get pollOptionIds => this["parts"]?.cast<int>() ?? [];
   int get parentId => this["parent"];

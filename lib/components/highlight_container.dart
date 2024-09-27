@@ -8,7 +8,7 @@ class HighlightContainer extends StatelessWidget {
       {required this.child, required this.isSelected, Key? key})
       : super(key: key);
 
-  Widget _createDivider(ThemeData theme) {
+  Widget _createDivider(FluentThemeData theme) {
     return Row(
       children: [
         const Expanded(child: SizedBox.shrink()),
