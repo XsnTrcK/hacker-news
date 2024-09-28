@@ -1,5 +1,7 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'package:any_link_preview/any_link_preview.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -19,8 +21,8 @@ class LinkThumbnail extends StatelessWidget {
     this.showErrorIcon = false,
   }) : super(key: key);
 
-  IconData _getReplacementIcon(String url) {
-    var firstChar = url.toLowerCase().replaceAll('www.', '')[0];
+  IconData _getReplacementIcon(String host) {
+    var firstChar = host.toLowerCase().replaceAll('www.', '')[0];
     switch (firstChar) {
       case 'a':
         return MdiIcons.alphaA;
@@ -79,49 +81,49 @@ class LinkThumbnail extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (url.isEmpty) return const SizedBox.shrink();
+  Widget _getIconWidget(String url) {
     return showErrorIcon
         ? Icon(
             _getReplacementIcon(Uri.parse(url).host),
             size: 100,
           )
         : const SizedBox.shrink();
-    // return FlutterLinkPreview(
-    //   key: key ?? const Key(""),
-    //   url: url,
-    //   builder: (InfoBase? info) {
-    //     final imageUrl = _getImageUrl(info);
-    //     if (imageUrl == null) {
-    //       return const SizedBox.shrink();
-    //     }
-    //     final returnWidget = CachedNetworkImage(
-    //       imageUrl: imageUrl,
-    //       imageBuilder: (context, imageProvider) {
-    //         return Padding(
-    //           padding: padding,
-    //           child: AspectRatio(
-    //             aspectRatio: 1,
-    //             child: Image(
-    //               image: imageProvider,
-    //               fit: BoxFit.cover,
-    //             ),
-    //           ),
-    //         );
-    //       },
-    //       errorWidget: (_, __, ___) {
-    //         return showErrorIcon
-    //             ? Icon(
-    //                 _getReplacementIcon(
-    //                     Uri.parse(imageUrl.isNotEmpty ? imageUrl : url).host),
-    //                 size: 100,
-    //               )
-    //             : const SizedBox.shrink();
-    //       },
-    //     );
-    //     return returnFlexible ? Expanded(child: returnWidget) : returnWidget;
-    //   },
-    // );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (url.isEmpty) return const SizedBox.shrink();
+    return FutureBuilder(
+      future: AnyLinkPreview.getMetadata(link: url),
+      builder: (context, AsyncSnapshot<Metadata?> snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data?.image == null) {
+            return const SizedBox.shrink();
+          }
+          final returnWidget = CachedNetworkImage(
+            imageUrl: snapshot.data!.image!,
+            imageBuilder: (context, imageProvider) {
+              return Padding(
+                padding: padding,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            },
+            errorWidget: (_, __, ___) {
+              return _getIconWidget(url);
+            },
+          );
+          return returnFlexible ? Expanded(child: returnWidget) : returnWidget;
+        } else if (snapshot.hasError) {
+          return _getIconWidget(url);
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 }

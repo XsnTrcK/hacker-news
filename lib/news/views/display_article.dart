@@ -6,7 +6,6 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/comments/views/comments_section.dart';
-import 'package:hackernews/components/gesture_detector.dart';
 import 'package:hackernews/components/item_details.dart';
 import 'package:hackernews/components/web_view/web_view.dart';
 import 'package:hackernews/models/item.dart';
@@ -17,9 +16,8 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class DisplayArticle extends StatefulWidget {
   static final PanelController _panelController = PanelController();
-  final GestureDragUpdateCallback onPanUpdate;
 
-  const DisplayArticle({Key? key, required this.onPanUpdate}) : super(key: key);
+  const DisplayArticle({Key? key}) : super(key: key);
 
   @override
   State<DisplayArticle> createState() => _DisplayArticle();
@@ -166,29 +164,20 @@ class _DisplayArticle extends State<DisplayArticle> {
                     child: WebView(
                         storyItem.url, storyItem.state.displayReaderMode),
                   ),
-                  collapsed: GestureDetectorWrapper(
-                    onPanUpdate: widget.onPanUpdate,
-                    child: Container(
-                      key: _collapsedKey,
-                      color: theme.scaffoldBackgroundColor,
-                      child: _createInfoSection(storyItem, context, true),
-                    ),
+                  collapsed: Container(
+                    key: _collapsedKey,
+                    color: theme.scaffoldBackgroundColor,
+                    child: _createInfoSection(storyItem, context, true),
                   ),
-                  panel: GestureDetectorWrapper(
-                    onPanUpdate: widget.onPanUpdate,
-                    child: Container(
-                      color: theme.scaffoldBackgroundColor,
-                      child: _createInfoSection(storyItem, context, false),
-                    ),
+                  panel: Container(
+                    color: theme.scaffoldBackgroundColor,
+                    child: _createInfoSection(storyItem, context, false),
                   ),
                 );
               }
-              return GestureDetectorWrapper(
-                onPanUpdate: widget.onPanUpdate,
-                child: SizedBox(
-                  height: maxHeight,
-                  child: _createInfoSection(state.item!, context, false),
-                ),
+              return SizedBox(
+                height: maxHeight,
+                child: _createInfoSection(state.item!, context, false),
               );
             } else {
               return const Center(child: ProgressBar());

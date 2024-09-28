@@ -3,6 +3,8 @@
 import 'dart:async';
 
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:hackernews/services/theme_extensions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -153,6 +155,9 @@ class _MobileWebViewState extends State<MobileWebView> {
 
     return WebViewWidget(
       controller: _controller,
+      gestureRecognizers: {
+        Factory(() => EagerGestureRecognizer()),
+      },
     );
   }
 }
