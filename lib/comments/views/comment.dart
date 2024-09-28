@@ -34,7 +34,7 @@ class _CommentState extends State<Comment> {
     _isExpanded = widget.isExpanded;
   }
 
-  Widget itemBuilder(CommentItem comment, ThemeData theme) {
+  Widget itemBuilder(CommentItem comment, FluentThemeData theme) {
     return Column(
       children: [
         CustomText(
@@ -42,14 +42,20 @@ class _CommentState extends State<Comment> {
           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
           padding: const EdgeInsets.all(2),
         ),
-        comment.isDead || !_isExpanded
+        comment.isDead || comment.isDeleted || !_isExpanded
             ? const SizedBox.shrink()
             : Visibility(
                 visible: _isExpanded,
                 child: Html(
-                  data: comment.text,
-                  customTextStyle: (_, __) =>
-                      TextStyle(fontSize: 10, color: theme.textColor),
+                  data: '<body>${comment.text}</body>',
+                  style: {
+                    "body": Style(
+                      fontSize: FontSize(10),
+                      color: theme.textColor,
+                      padding: HtmlPaddings.zero,
+                      margin: Margins.symmetric(horizontal: 2),
+                    )
+                  },
                 ),
               ),
       ],

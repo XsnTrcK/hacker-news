@@ -42,9 +42,9 @@ class _MyAppState extends State<MyApp> {
     final accentColor = Colors.orange;
     return FluentApp(
       title: 'Hacker Newser',
-      theme: ThemeData.light().createFluentTheme(
+      theme: FluentThemeData.light().createFluentTheme(
           Colors.white, Colors.black, accentColor, accentColor.lightest),
-      darkTheme: ThemeData.dark().createFluentTheme(
+      darkTheme: FluentThemeData.dark().createFluentTheme(
           Colors.black, Colors.white, accentColor, accentColor.darkest),
       themeMode: ThemeMode.system,
       home: _createNewsPage(),

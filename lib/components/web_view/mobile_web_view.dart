@@ -21,29 +21,48 @@ class MobileWebView extends StatefulWidget {
 class _MobileWebViewState extends State<MobileWebView> {
   final RegExp _localStyleRegExp = RegExp('style="[a-zA-Z0-9#:%;\\s-]+"');
   final RegExp _navTagsRegExp = RegExp(r'<nav[a-zA-Z"=\s-]*>.*<\/nav>');
-  bool _isLoading = true;
   String _downloadedHtml = '';
   late String _readerViewStyle;
   late WebViewController _controller;
 
+  @override
+  void initState() {
+    _controller = WebViewController()
+      ..setBackgroundColor(Colors.white)
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (_) async {
+          if (_downloadedHtml != '') return;
+          await _getSimplifiedHtml((html) async {
+            if (!widget._displayReaderMode) return;
+            await _controller.loadHtmlString(
+                "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}",
+                baseUrl: widget.url);
+          });
+        },
+      ))
+      ..loadRequest(Uri.parse(widget.url));
+    super.initState();
+  }
+
   // TODO: Move to separate class?
   Future<String?> _runJs(String command) async {
     try {
-      return await _controller.runJavascriptReturningResult(command);
+      return await _controller.runJavaScriptReturningResult(command) as String?;
     } catch (_) {
       return null;
     }
   }
 
   // TODO: Move to separate class?
-  Future _getSimplifiedHtml(void Function(String html) updateController) async {
+  Future _getSimplifiedHtml(
+      Future Function(String html) updateController) async {
     // Check for class news-article--content--body
     var tempHtml = await _runJs(
         "window.document.getElementsByClassName('news-article--content--body')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for class body-content
@@ -51,8 +70,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByClassName('body-content')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for class article
@@ -60,8 +78,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByClassName('article')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for tag article
@@ -69,8 +86,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByTagName('article')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for class content
@@ -78,8 +94,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByClassName('content')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for id content
@@ -87,8 +102,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         await _runJs("window.document.getElementById('content').innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for tag main
@@ -96,8 +110,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         "window.document.getElementsByTagName('main')[0].innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
 
     // Check for id theContent for web archive
@@ -105,8 +118,7 @@ class _MobileWebViewState extends State<MobileWebView> {
         await _runJs("window.document.getElementById('theContent').innerHTML;");
     if (tempHtml?.isNotEmpty ?? false) {
       _downloadedHtml = tempHtml!;
-      updateController(_downloadedHtml);
-      return;
+      return await updateController(_downloadedHtml);
     }
   }
 
@@ -125,11 +137,11 @@ class _MobileWebViewState extends State<MobileWebView> {
       return;
     }
     if (widget._displayReaderMode) {
-      _controller.loadHtmlString(
-          "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}",
-          baseUrl: widget.url);
+      final htmlString =
+          "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}";
+      _controller.loadHtmlString(htmlString, baseUrl: widget.url);
     } else {
-      _controller.loadUrl(widget.url);
+      _controller.loadRequest(Uri.parse(widget.url));
     }
   }
 
@@ -137,40 +149,15 @@ class _MobileWebViewState extends State<MobileWebView> {
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     _readerViewStyle = theme.readerViewStyle;
-    return Stack(
-      children: [
-        WebView(
-          initialUrl: widget.url,
-          javascriptMode: JavascriptMode.unrestricted,
-          backgroundColor: theme.scaffoldBackgroundColor,
-          onPageFinished: (_) async {
-            if (!_isLoading) return;
-            setState(() => _isLoading = false);
-            _getSimplifiedHtml((html) {
-              if (!widget._displayReaderMode) {
-                return;
-              }
-              setState(() {
-                _controller.loadHtmlString(
-                    "${theme.readerViewStyle}${_removeUnwantedHtml(_downloadedHtml)}",
-                    baseUrl: widget.url);
-              });
-            });
-          },
-          onWebViewCreated: (WebViewController webViewController) {
-            _controller = webViewController;
-          },
-          gestureRecognizers: {
-            Factory<VerticalDragGestureRecognizer>(
-                () => VerticalDragGestureRecognizer())
-          },
-        ),
-        _isLoading
-            ? const ScaffoldPage(
-                content: Center(child: ProgressBar()),
-              )
-            : const SizedBox.shrink()
-      ],
+    _controller.setBackgroundColor(widget._displayReaderMode
+        ? theme.scaffoldBackgroundColor
+        : Colors.white);
+
+    return WebViewWidget(
+      controller: _controller,
+      gestureRecognizers: {
+        Factory(() => EagerGestureRecognizer()),
+      },
     );
   }
 }

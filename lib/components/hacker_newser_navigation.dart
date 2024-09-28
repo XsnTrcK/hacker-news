@@ -2,6 +2,7 @@ import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/components/highlight_container.dart';
+import 'package:hackernews/components/pill_button.dart';
 import 'package:hackernews/menu/menu.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
@@ -21,40 +22,19 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
   NewsType _newsType = NewsType.top;
   int _selectedIndex = 1;
 
-  NewsType _getNewsType(int selectedItem) {
-    switch (selectedItem) {
-      case 0:
-        return NewsType.top;
-      case 1:
-        return NewsType.show;
-      case 2:
-        return NewsType.ask;
-      case 3:
-        return NewsType.job;
-      case 4:
-        return NewsType.newStories;
-      case 5:
-        return NewsType.best;
-      default:
-        throw Error();
-    }
+  _onPressed(NewsType newsType) async {
+    setState(() {
+      _selectedIndex = 1;
+      _newsType = newsType;
+    });
+    context.read<NewsBloc>().add(FetchNews(_newsType));
+    await widget._pageController.animateToPage(_selectedIndex,
+        duration: const Duration(seconds: 1),
+        curve: Curves.fastLinearToSlowEaseIn);
   }
 
-  int _getSelectedIndex(NewsType newsType) {
-    switch (newsType) {
-      case NewsType.top:
-        return 0;
-      case NewsType.show:
-        return 1;
-      case NewsType.ask:
-        return 2;
-      case NewsType.job:
-        return 3;
-      case NewsType.newStories:
-        return 4;
-      case NewsType.best:
-        return 5;
-    }
+  bool newsTypeSelected(NewsType newsType) {
+    return newsType == _newsType;
   }
 
   Widget _buildBottomNav() {
@@ -65,8 +45,8 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
             isSelected: _selectedIndex == 0,
             child: IconButton(
               style: ButtonStyle(
-                iconSize: ButtonState.all(20),
-                padding: ButtonState.all(
+                iconSize: WidgetStateProperty.all(20),
+                padding: WidgetStateProperty.all(
                     const EdgeInsets.symmetric(vertical: 13, horizontal: 10)),
               ),
               icon: const Icon(FluentIcons.collapse_menu),
@@ -83,43 +63,43 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
           flex: 7,
           child: HighlightContainer(
             isSelected: _selectedIndex == 1,
-            child: PillButtonBar(
-              selected: _getSelectedIndex(_newsType),
-              items: const [
-                PillButtonBarItem(text: Text("Top")),
-                PillButtonBarItem(text: Text("Show")),
-                PillButtonBarItem(text: Text("Ask")),
-                PillButtonBarItem(text: Text("Job")),
-                PillButtonBarItem(text: Text("New")),
-                PillButtonBarItem(text: Text("Best")),
+            child: CommandBar(
+              overflowBehavior: CommandBarOverflowBehavior.scrolling,
+              primaryItems: [
+                PillButtonBarItem(
+                  item: const Text("Top"),
+                  onPressed: () => _onPressed(NewsType.top),
+                  selected: newsTypeSelected(NewsType.top),
+                ),
+                PillButtonBarItem(
+                  item: const Text("Show"),
+                  onPressed: () => _onPressed(NewsType.show),
+                  selected: newsTypeSelected(NewsType.show),
+                ),
+                PillButtonBarItem(
+                  item: const Text("Ask"),
+                  onPressed: () => _onPressed(NewsType.ask),
+                  selected: newsTypeSelected(NewsType.ask),
+                ),
+                PillButtonBarItem(
+                  item: const Text("Job"),
+                  onPressed: () => _onPressed(NewsType.job),
+                  selected: newsTypeSelected(NewsType.job),
+                ),
+                PillButtonBarItem(
+                  item: const Text("New"),
+                  onPressed: () => _onPressed(NewsType.newStories),
+                  selected: newsTypeSelected(NewsType.newStories),
+                ),
+                PillButtonBarItem(
+                  item: const Text("Best"),
+                  onPressed: () => _onPressed(NewsType.best),
+                  selected: newsTypeSelected(NewsType.best),
+                ),
               ],
-              onChanged: (index) async {
-                setState(() {
-                  _selectedIndex = 1;
-                  _newsType = _getNewsType(index);
-                });
-                context.read<NewsBloc>().add(FetchNews(_newsType));
-                await widget._pageController.animateToPage(_selectedIndex,
-                    duration: const Duration(seconds: 1),
-                    curve: Curves.fastLinearToSlowEaseIn);
-              },
             ),
           ),
         ),
-        // Expanded(
-        //   child: HighlightContainer(
-        //     isSelected: _selectedIndex == 2,
-        //     child: IconButton(
-        //       style: ButtonStyle(
-        //         iconSize: ButtonState.all(20),
-        //         padding: ButtonState.all(
-        //             const EdgeInsets.symmetric(vertical: 13, horizontal: 10)),
-        //       ),
-        //       icon: const Icon(FluentIcons.account_management),
-        //       onPressed: () => setState(() => _selectedIndex = 2),
-        //     ),
-        //   ),
-        // ),
       ],
     );
   }

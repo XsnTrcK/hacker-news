@@ -75,8 +75,13 @@ class _DisplayArticle extends State<DisplayArticle> {
     var textHtml = item.text != null
         ? SingleChildScrollView(
             child: Html(
-              padding: const EdgeInsets.symmetric(horizontal: 5),
-              data: item.text,
+              data: '<body>${item.text}</body>',
+              style: {
+                "body": Style(
+                  padding: HtmlPaddings.zero,
+                  margin: Margins.symmetric(horizontal: 5),
+                )
+              },
             ),
           )
         : null;

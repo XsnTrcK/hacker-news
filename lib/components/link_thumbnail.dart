@@ -1,9 +1,9 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'package:any_link_preview/any_link_preview.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter_link_preview/flutter_link_preview.dart';
-import 'package:mdi/mdi.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class LinkThumbnail extends StatelessWidget {
   final String url;
@@ -21,119 +21,108 @@ class LinkThumbnail extends StatelessWidget {
     this.showErrorIcon = false,
   }) : super(key: key);
 
-  String? _getImageUrl(InfoBase? info) {
-    switch (info.runtimeType) {
-      case WebVideoInfo:
-        return (info as WebVideoInfo).image;
-      case WebImageInfo:
-        return (info as WebImageInfo).image;
-      case WebInfo:
-        final webInfo = (info as WebInfo);
-        final favicon = webInfo.icon;
-        if (useFavicon) {
-          return favicon;
-        }
-        return webInfo.image;
-      default:
-        return null;
-    }
-  }
-
-  IconData _getReplacementIcon(String url) {
-    var firstChar = url.toLowerCase().replaceAll('www.', '')[0];
+  IconData _getReplacementIcon(String host) {
+    var firstChar = host.toLowerCase().replaceAll('www.', '')[0];
     switch (firstChar) {
       case 'a':
-        return Mdi.alphaA;
+        return MdiIcons.alphaA;
       case 'b':
-        return Mdi.alphaB;
+        return MdiIcons.alphaB;
       case 'c':
-        return Mdi.alphaC;
+        return MdiIcons.alphaC;
       case 'd':
-        return Mdi.alphaD;
+        return MdiIcons.alphaD;
       case 'e':
-        return Mdi.alphaE;
+        return MdiIcons.alphaE;
       case 'f':
-        return Mdi.alphaF;
+        return MdiIcons.alphaF;
       case 'g':
-        return Mdi.alphaG;
+        return MdiIcons.alphaG;
       case 'h':
-        return Mdi.alphaH;
+        return MdiIcons.alphaH;
       case 'i':
-        return Mdi.alphaI;
+        return MdiIcons.alphaI;
       case 'j':
-        return Mdi.alphaJ;
+        return MdiIcons.alphaJ;
       case 'k':
-        return Mdi.alphaK;
+        return MdiIcons.alphaK;
       case 'l':
-        return Mdi.alphaL;
+        return MdiIcons.alphaL;
       case 'm':
-        return Mdi.alphaM;
+        return MdiIcons.alphaM;
       case 'n':
-        return Mdi.alphaN;
+        return MdiIcons.alphaN;
       case 'o':
-        return Mdi.alphaO;
+        return MdiIcons.alphaO;
       case 'p':
-        return Mdi.alphaP;
+        return MdiIcons.alphaP;
       case 'q':
-        return Mdi.alphaQ;
+        return MdiIcons.alphaQ;
       case 'r':
-        return Mdi.alphaR;
+        return MdiIcons.alphaR;
       case 's':
-        return Mdi.alphaS;
+        return MdiIcons.alphaS;
       case 't':
-        return Mdi.alphaT;
+        return MdiIcons.alphaT;
       case 'u':
-        return Mdi.alphaU;
+        return MdiIcons.alphaU;
       case 'v':
-        return Mdi.alphaV;
+        return MdiIcons.alphaV;
       case 'w':
-        return Mdi.alphaW;
+        return MdiIcons.alphaW;
       case 'x':
-        return Mdi.alphaX;
+        return MdiIcons.alphaX;
       case 'y':
-        return Mdi.alphaY;
+        return MdiIcons.alphaY;
       case 'z':
-        return Mdi.alphaZ;
+        return MdiIcons.alphaZ;
       default:
         return FluentIcons.photo2;
     }
   }
 
+  Widget _getIconWidget(String url) {
+    return showErrorIcon
+        ? Icon(
+            _getReplacementIcon(Uri.parse(url).host),
+            size: 100,
+          )
+        : const SizedBox.shrink();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FlutterLinkPreview(
-      key: key,
-      url: url,
-      builder: (InfoBase? info) {
-        final imageUrl = _getImageUrl(info);
-        if (imageUrl == null) {
-          return const SizedBox.shrink();
-        }
-        final returnWidget = CachedNetworkImage(
-          imageUrl: imageUrl,
-          imageBuilder: (context, imageProvider) {
-            return Padding(
-              padding: padding,
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Image(
-                  image: imageProvider,
-                  fit: BoxFit.cover,
+    if (url.isEmpty) return const SizedBox.shrink();
+    return FutureBuilder(
+      future: AnyLinkPreview.getMetadata(link: url),
+      builder: (context, AsyncSnapshot<Metadata?> snapshot) {
+        if (snapshot.hasData) {
+          if (snapshot.data?.image == null) {
+            return const SizedBox.shrink();
+          }
+          final returnWidget = CachedNetworkImage(
+            imageUrl: snapshot.data!.image!,
+            imageBuilder: (context, imageProvider) {
+              return Padding(
+                padding: padding,
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image(
+                    image: imageProvider,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-            );
-          },
-          errorWidget: (_, __, ___) {
-            return showErrorIcon
-                ? Icon(
-                    _getReplacementIcon(
-                        Uri.parse(imageUrl.isNotEmpty ? imageUrl : url).host),
-                    size: 100,
-                  )
-                : const SizedBox.shrink();
-          },
-        );
-        return returnFlexible ? Expanded(child: returnWidget) : returnWidget;
+              );
+            },
+            errorWidget: (_, __, ___) {
+              return _getIconWidget(url);
+            },
+          );
+          return returnFlexible ? Expanded(child: returnWidget) : returnWidget;
+        } else if (snapshot.hasError) {
+          return _getIconWidget(url);
+        }
+        return const SizedBox.shrink();
       },
     );
   }
