@@ -11,7 +11,10 @@ import 'package:webview_flutter/webview_flutter.dart';
 class MobileWebView extends StatefulWidget {
   final String url;
   final bool _displayReaderMode;
-  const MobileWebView(this.url, this._displayReaderMode, {Key? key})
+  final bool eager;
+
+  const MobileWebView(this.url, this._displayReaderMode,
+      {Key? key, this.eager = true})
       : super(key: key);
 
   @override
@@ -155,9 +158,9 @@ class _MobileWebViewState extends State<MobileWebView> {
 
     return WebViewWidget(
       controller: _controller,
-      gestureRecognizers: {
-        Factory(() => EagerGestureRecognizer()),
-      },
+      gestureRecognizers: widget.eager
+          ? {Factory(() => EagerGestureRecognizer())}
+          : {Factory(() => PanGestureRecognizer())},
     );
   }
 }

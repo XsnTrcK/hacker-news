@@ -12,12 +12,15 @@ import 'package:hackernews/models/item.dart';
 import 'package:hackernews/news/bloc/item_bloc.dart';
 import 'package:hackernews/news/bloc/item_events.dart';
 import 'package:hackernews/news/bloc/item_state.dart';
+import 'package:hackernews/services/link_handler.dart';
+import 'package:hackernews/store/store.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class DisplayArticle extends StatefulWidget {
   static final PanelController _panelController = PanelController();
+  final TitledItem item;
 
-  const DisplayArticle({Key? key}) : super(key: key);
+  const DisplayArticle(this.item, {Key? key}) : super(key: key);
 
   @override
   State<DisplayArticle> createState() => _DisplayArticle();
@@ -76,6 +79,7 @@ class _DisplayArticle extends State<DisplayArticle> {
         ? SingleChildScrollView(
             child: Html(
               data: '<body>${item.text}</body>',
+              onLinkTap: (url, _, __) => handleLinkTap(context, url),
               style: {
                 "body": Style(
                   padding: HtmlPaddings.zero,
@@ -126,6 +130,25 @@ class _DisplayArticle extends State<DisplayArticle> {
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: getNewsStore(),
+      builder: (context, AsyncSnapshot<NewsStore> snapshot) {
+        if (snapshot.hasData) {
+          return BlocProvider(
+            create: (_) => ItemBloc<TitledItem>(snapshot.data!)
+              ..add(HasBeenReadEvent(widget.item)),
+            child: _buildPage(context),
+          );
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('Unable to open selected article'));
+        } else {
+          return const Center(child: ProgressBar());
+        }
+      },
+    );
+  }
+
+  Widget _buildPage(BuildContext context) {
     var theme = FluentTheme.of(context);
     var mediaQueryData = MediaQuery.of(context);
     var maxHeight = mediaQueryData.size.height -

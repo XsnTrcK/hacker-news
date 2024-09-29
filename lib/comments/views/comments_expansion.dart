@@ -26,10 +26,11 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
   Widget itemBuilder(CommentItem comment, fluent_ui.FluentThemeData theme) {
     _isExpanded = comment.state.isExpanded;
     return ExpansionTile(
+      shape: Border.all(width: 0),
       expandedAlignment: Alignment.centerLeft,
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       maintainState: true,
-      tilePadding: const EdgeInsets.symmetric(horizontal: 5),
+      tilePadding: const EdgeInsets.symmetric(horizontal: 0),
       textColor: theme.textColor,
       initiallyExpanded: _isExpanded,
       onExpansionChanged: (expanded) {
@@ -46,10 +47,13 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
             (id) => Container(
               decoration: BoxDecoration(
                 border: Border(
-                  left: BorderSide(color: theme.textColor, width: 1),
+                  left: BorderSide(
+                    color: theme.textColor.withOpacity(.3),
+                    width: 1,
+                  ),
                 ),
               ),
-              margin: const EdgeInsets.only(left: 20),
+              padding: const EdgeInsets.only(left: 20),
               child: CommentsExpansion(id),
             ),
           )
