@@ -10,8 +10,11 @@ extension FluentTheming on FluentThemeData {
     return copyWith(
       accentColor: accentColor,
       scaffoldBackgroundColor: mainColor,
-      dividerTheme:
-          DividerThemeData(decoration: BoxDecoration(color: textColor)),
+      dividerTheme: DividerThemeData(
+        decoration: BoxDecoration(
+          color: textColor.withOpacity(.25),
+        ),
+      ),
       navigationPaneTheme: NavigationPaneThemeData(
         backgroundColor: mainColor,
         highlightColor: highlightColor,

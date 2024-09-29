@@ -16,7 +16,7 @@ abstract class NewsApi {
   Future<List<TitledItem>> getNews(NewsType newsType,
       {int count = 50, int offset = 0});
 
-  Future<Item> _getNewsItem(int id) async {
+  Future<Item> getNewsItem(int id) async {
     final response = await _httpClient.get(config.getItemUri(id));
     return Item.fromJson(response.body);
   }
@@ -74,7 +74,7 @@ class SavedArticlesRetriever extends NewsApi {
       if (_store.containsKey(newsId)) {
         newsItem = _store.get(newsId);
       } else {
-        newsItem = await _getNewsItem(newsId);
+        newsItem = await getNewsItem(newsId);
         _store.save(newsItem);
       }
       newsToReturn.add(newsItem as TitledItem);
@@ -145,7 +145,7 @@ class NewsApiRetriever extends NewsApi {
       if (_newsStore.containsKey(newsId)) {
         newsItem = _newsStore.get(newsId);
       } else {
-        newsItem = await _getNewsItem(newsId);
+        newsItem = await getNewsItem(newsId);
         _newsStore.save(newsItem);
       }
       newsToReturn.add(newsItem as TitledItem);

@@ -1,9 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
-// ignore: import_of_legacy_library_into_null_safe
 import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/components/custom_text.dart';
 import 'package:hackernews/models/item.dart';
 import 'package:hackernews/services/theme_extensions.dart';
+import 'package:hackernews/services/link_handler.dart';
 
 class Comment extends StatefulWidget {
   final CommentItem commentItem;
@@ -48,6 +48,7 @@ class _CommentState extends State<Comment> {
                 visible: _isExpanded,
                 child: Html(
                   data: '<body>${comment.text}</body>',
+                  onLinkTap: (url, _, __) => handleLinkTap(context, url),
                   style: {
                     "body": Style(
                       fontSize: FontSize(10),
