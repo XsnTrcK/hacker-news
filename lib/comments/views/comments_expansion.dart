@@ -26,7 +26,10 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
   Widget itemBuilder(CommentItem comment, fluent_ui.FluentThemeData theme) {
     _isExpanded = comment.state.isExpanded;
     return ExpansionTile(
-      shape: Border.all(width: 0),
+      shape: Border.all(
+        width: 0,
+        color: const Color.fromARGB(0, 0, 0, 0),
+      ),
       expandedAlignment: Alignment.centerLeft,
       expandedCrossAxisAlignment: CrossAxisAlignment.start,
       maintainState: true,

@@ -1,4 +1,4 @@
-package com.example.xsntrckstudios.hackernewser
+package com.xsntrckstudios.hackernewser
 
 import io.flutter.embedding.android.FlutterActivity
 
