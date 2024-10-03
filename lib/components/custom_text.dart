@@ -27,7 +27,7 @@ class CustomText extends StatelessWidget {
         child: Text(
           text,
           overflow: overflow,
-          style: (style ?? theme.typography.caption!)
+          style: (style ?? theme.dynamicTypography.caption!)
               .merge(TextStyle(color: theme.textColor)),
         ),
       ),
