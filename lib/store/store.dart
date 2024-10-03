@@ -21,17 +21,21 @@ abstract class ItemUpdater<T> {
 }
 
 NewsStore? _newsStore;
-Future<NewsStore> getNewsStore({bool deleteBox = false}) async {
-  if (_newsStore != null) return _newsStore!;
-  _newsStore = NewsStore();
-  await _newsStore!.init(deleteBox: deleteBox);
+NewsStore get newsStore {
+  if (_newsStore == null) {
+    throw Exception("Should only retrieve when initialized");
+  }
   return _newsStore!;
+}
+
+Future initNewsStore({bool deleteBox = false}) async {
+  _newsStore = await NewsStore.create(deleteBox);
 }
 
 class NewsStore extends Store<Item> with ItemUpdater<Item> {
   late Box<String> _newsBox;
 
-  Future init({bool deleteBox = false}) async {
+  Future _init({bool deleteBox = false}) async {
     _newsBox = await Hive.openBox<String>("news");
     savedItems =
         (jsonDecode(_newsBox.get(_savedItemsKey) ?? "[]") as List).cast<int>();
@@ -87,5 +91,11 @@ class NewsStore extends Store<Item> with ItemUpdater<Item> {
     item.state.displayReaderMode = !item.state.displayReaderMode;
     save(item);
     return item;
+  }
+
+  static Future<NewsStore> create(bool deleteBox) async {
+    final newsStore = NewsStore();
+    await newsStore._init(deleteBox: deleteBox);
+    return newsStore;
   }
 }

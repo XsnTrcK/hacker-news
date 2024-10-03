@@ -13,6 +13,7 @@ import 'package:hackernews/news/bloc/item_bloc.dart';
 import 'package:hackernews/news/bloc/item_events.dart';
 import 'package:hackernews/news/bloc/item_state.dart';
 import 'package:hackernews/services/link_handler.dart';
+import 'package:hackernews/store/settings_store.dart';
 import 'package:hackernews/store/store.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
@@ -130,21 +131,10 @@ class _DisplayArticle extends State<DisplayArticle> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: getNewsStore(),
-      builder: (context, AsyncSnapshot<NewsStore> snapshot) {
-        if (snapshot.hasData) {
-          return BlocProvider(
-            create: (_) => ItemBloc<TitledItem>(snapshot.data!)
-              ..add(HasBeenReadEvent(widget.item)),
-            child: _buildPage(context),
-          );
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Unable to open selected article'));
-        } else {
-          return const Center(child: ProgressBar());
-        }
-      },
+    return BlocProvider(
+      create: (_) =>
+          ItemBloc<TitledItem>(newsStore)..add(HasBeenReadEvent(widget.item)),
+      child: _buildPage(context),
     );
   }
 
@@ -178,7 +168,7 @@ class _DisplayArticle extends State<DisplayArticle> {
                     }
                   },
                   maxHeight: maxHeight,
-                  minHeight: 76,
+                  minHeight: collapsedHeight(),
                   body: Padding(
                     padding: EdgeInsets.only(
                         bottom: _collapsedSize.height +
@@ -209,5 +199,17 @@ class _DisplayArticle extends State<DisplayArticle> {
         ),
       ),
     );
+  }
+
+  double collapsedHeight() {
+    switch (settings.fontSize) {
+      case SettingsFontSize.large:
+        return 82;
+      case SettingsFontSize.medium:
+        return 80;
+      case SettingsFontSize.small:
+      default:
+        return 77;
+    }
   }
 }

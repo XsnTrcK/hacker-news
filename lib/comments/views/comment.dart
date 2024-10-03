@@ -35,11 +35,16 @@ class _CommentState extends State<Comment> {
   }
 
   Widget itemBuilder(CommentItem comment, FluentThemeData theme) {
+    final typography = theme.dynamicTypography;
     return Column(
       children: [
         CustomText(
           "${comment.createdBy} - ${comment.prettySinceMessage()}",
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          style: typography.caption!.merge(
+            const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           padding: const EdgeInsets.all(2),
         ),
         comment.isDead || comment.isDeleted || !_isExpanded
@@ -51,7 +56,7 @@ class _CommentState extends State<Comment> {
                   onLinkTap: (url, _, __) => handleLinkTap(context, url),
                   style: {
                     "body": Style(
-                      fontSize: FontSize(10),
+                      fontSize: FontSize(typography.caption!.fontSize!),
                       color: theme.textColor,
                       padding: HtmlPaddings.zero,
                       margin: Margins.symmetric(horizontal: 2),

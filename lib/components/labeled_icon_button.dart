@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:hackernews/services/theme_extensions.dart';
 
 class LabeledIconButton extends StatelessWidget {
   final void Function() onPressed;
@@ -13,7 +14,7 @@ class LabeledIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typography = FluentTheme.of(context).typography;
+    final typography = FluentTheme.of(context).dynamicTypography;
     return GestureDetector(
       onTap: onPressed,
       child: Row(

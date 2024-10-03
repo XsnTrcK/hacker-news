@@ -42,7 +42,10 @@ class ImageListItem extends StatelessWidget {
         _createUrlInfo(),
         Expanded(
           flex: 5,
-          child: ItemDetails(item),
+          child: ItemDetails(
+            item,
+            overflow: TextOverflow.fade,
+          ),
         ),
       ],
     );

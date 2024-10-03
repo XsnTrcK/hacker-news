@@ -1,0 +1,3 @@
+class SettingsBlocUpdated {
+  const SettingsBlocUpdated();
+}
