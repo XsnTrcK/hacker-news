@@ -11,7 +11,6 @@ abstract class NewsApi {
   final Client _httpClient;
   const NewsApi(this._httpClient);
 
-  Future init();
   Future refresh(NewsType newsType);
   Future<List<TitledItem>> getNews(NewsType newsType,
       {int count = 50, int offset = 0});
@@ -27,35 +26,15 @@ Client get httpClient {
   return _client ?? (_client = Client());
 }
 
-SavedArticlesRetriever? _savedArticlesRetriever;
-Future<SavedArticlesRetriever> getSavedArticlesRetriever() async {
-  if (_savedArticlesRetriever != null) return _savedArticlesRetriever!;
-  _savedArticlesRetriever = SavedArticlesRetriever(httpClient);
-  await _savedArticlesRetriever!.init();
-  return _savedArticlesRetriever!;
-}
-
-NewsApiRetriever? _newsApiRetriever;
-Future<NewsApiRetriever> getNewsApiRetriever({bool deleteBox = false}) async {
-  if (_newsApiRetriever != null) return _newsApiRetriever!;
-  _newsApiRetriever = NewsApiRetriever(httpClient);
-  await _newsApiRetriever!.init(deleteBox: deleteBox);
-  return _newsApiRetriever!;
-}
-
 class SavedArticlesRetriever extends NewsApi {
-  late Store<Item> _store;
   late List<int> _savedNews = [];
-  late void Function() _updateSavedNews;
 
-  SavedArticlesRetriever(Client client) : super(client);
-
-  @override
-  Future init() async {
-    final store = await getNewsStore();
-    _updateSavedNews = () => _savedNews = store.savedItems;
-    _store = store;
+  SavedArticlesRetriever(Client client) : super(client) {
     _updateSavedNews();
+  }
+
+  void _updateSavedNews() {
+    _savedNews = newsStore.savedItems;
   }
 
   @override
@@ -71,11 +50,11 @@ class SavedArticlesRetriever extends NewsApi {
     for (; offset < endIndex; offset++) {
       final newsId = _savedNews[offset];
       Item? newsItem;
-      if (_store.containsKey(newsId)) {
-        newsItem = _store.get(newsId);
+      if (newsStore.containsKey(newsId)) {
+        newsItem = newsStore.get(newsId);
       } else {
         newsItem = await getNewsItem(newsId);
-        _store.save(newsItem);
+        newsStore.save(newsItem);
       }
       newsToReturn.add(newsItem as TitledItem);
     }
@@ -89,15 +68,8 @@ class SavedArticlesRetriever extends NewsApi {
 
 class NewsApiRetriever extends NewsApi {
   final Map<NewsType, List<int>> _newsIdsMap = {};
-  late Store<Item> _newsStore;
 
   NewsApiRetriever(Client httpClient) : super(httpClient);
-
-  @override
-  Future init({bool deleteBox = false}) async {
-    // Should this be refactored out?
-    _newsStore = await getNewsStore(deleteBox: deleteBox);
-  }
 
   List<int> _convertNewsIds(String newsIdsJson) {
     return (jsonDecode(newsIdsJson) as List<dynamic>).cast<int>();
@@ -142,15 +114,32 @@ class NewsApiRetriever extends NewsApi {
     for (; offset < endIndex; offset++) {
       final newsId = _newsIdsMap[newsType]![offset];
       Item? newsItem;
-      if (_newsStore.containsKey(newsId)) {
-        newsItem = _newsStore.get(newsId);
+      if (newsStore.containsKey(newsId)) {
+        newsItem = newsStore.get(newsId);
       } else {
         newsItem = await getNewsItem(newsId);
-        _newsStore.save(newsItem);
+        newsStore.save(newsItem);
       }
       newsToReturn.add(newsItem as TitledItem);
     }
 
     return newsToReturn;
   }
+
+  static Future<NewsApiRetriever> create(bool deleteBox) async {
+    final newsApiRetriever = NewsApiRetriever(httpClient);
+    return newsApiRetriever;
+  }
+}
+
+SavedArticlesRetriever? _savedArticlesRetriever;
+SavedArticlesRetriever get savedArticlesRetriever {
+  _savedArticlesRetriever ??= SavedArticlesRetriever(httpClient);
+  return _savedArticlesRetriever!;
+}
+
+NewsApiRetriever? _newsApiRetriever;
+NewsApiRetriever get newsApiRetriever {
+  _newsApiRetriever ??= NewsApiRetriever(httpClient);
+  return _newsApiRetriever!;
 }

@@ -31,8 +31,7 @@ void handleLinkTap(BuildContext context, String? url) async {
     return _openWebView(context, url);
   }
 
-  var newsRetriever = await getNewsApiRetriever();
-  var item = await newsRetriever.getNewsItem(itemId);
+  var item = await newsApiRetriever.getNewsItem(itemId);
   if (item is! TitledItem) {
     return _openWebView(context, url);
   }

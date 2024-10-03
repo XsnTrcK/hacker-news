@@ -5,7 +5,7 @@ class CustomText extends StatelessWidget {
   final String text;
   final EdgeInsetsGeometry padding;
   final AlignmentGeometry alignment;
-  final TextStyle style;
+  final TextStyle? style;
   final TextOverflow? overflow;
 
   const CustomText(
@@ -13,9 +13,7 @@ class CustomText extends StatelessWidget {
     Key? key,
     this.padding = const EdgeInsets.symmetric(horizontal: 5),
     this.alignment = Alignment.centerLeft,
-    this.style = const TextStyle(
-      fontSize: 10,
-    ),
+    this.style,
     this.overflow,
   }) : super(key: key);
 
@@ -29,7 +27,8 @@ class CustomText extends StatelessWidget {
         child: Text(
           text,
           overflow: overflow,
-          style: style.merge(TextStyle(color: theme.textColor)),
+          style: (style ?? theme.typography.caption!)
+              .merge(TextStyle(color: theme.textColor)),
         ),
       ),
     );
