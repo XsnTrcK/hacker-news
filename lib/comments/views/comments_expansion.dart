@@ -7,10 +7,10 @@ import 'package:hackernews/services/theme_extensions.dart';
 
 class CommentsExpansion extends StatefulWidget {
   final int commentId;
-  const CommentsExpansion(this.commentId, {Key? key}) : super(key: key);
+  const CommentsExpansion(this.commentId, {super.key});
 
   @override
-  _CommentsExpansionState createState() => _CommentsExpansionState();
+  State<CommentsExpansion> createState() => _CommentsExpansionState();
 }
 
 class _CommentsExpansionState extends State<CommentsExpansion> {
@@ -51,7 +51,7 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
               decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(
-                    color: theme.textColor.withOpacity(.3),
+                    color: theme.textColor.withValues(alpha: .3),
                     width: 1,
                   ),
                 ),

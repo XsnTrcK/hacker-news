@@ -5,7 +5,7 @@ import 'package:stream_transform/stream_transform.dart';
 class ThrottledBloc<TEvent, TState> extends Bloc<TEvent, TState> {
   static const Duration _throttleDuration = Duration(milliseconds: 100);
 
-  ThrottledBloc(TState state) : super(state);
+  ThrottledBloc(super.state);
 
   EventTransformer<E> throttleDroppable<E>() {
     return (events, mapper) =>

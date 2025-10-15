@@ -8,7 +8,7 @@ class ImageListItem extends StatelessWidget {
   final TitledItem item;
   final double? maxHeight;
 
-  const ImageListItem(this.item, {Key? key, this.maxHeight}) : super(key: key);
+  const ImageListItem(this.item, {super.key, this.maxHeight});
 
   Widget _createUrlInfo() {
     switch (item.runtimeType) {

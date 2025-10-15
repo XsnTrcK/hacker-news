@@ -1,7 +1,6 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/foundation.dart';
 
 const double _kMinHeight = 28.0;
 
@@ -15,16 +14,16 @@ class PillButtonBarItem extends CommandBarItem {
     required this.item,
     this.onPressed,
     this.selected = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   final Widget item;
   final VoidCallback? onPressed;
   final bool selected;
 
   Color _applyOpacity(Color? color, Set<WidgetState> states) {
-    return color?.withOpacity(
-          states.isPressed
+    return color?.withValues(
+          alpha: states.isPressed
               ? 0.925
               : states.isFocused
                   ? 0.4

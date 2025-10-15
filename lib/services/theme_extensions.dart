@@ -13,7 +13,7 @@ extension FluentTheming on FluentThemeData {
       scaffoldBackgroundColor: mainColor,
       dividerTheme: DividerThemeData(
         decoration: BoxDecoration(
-          color: textColor.withOpacity(.25),
+          color: textColor.withValues(alpha: .25),
         ),
       ),
       navigationPaneTheme: NavigationPaneThemeData(

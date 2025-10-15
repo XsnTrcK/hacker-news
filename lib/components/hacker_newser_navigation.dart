@@ -12,7 +12,7 @@ class HackerNewserNavigation extends StatefulWidget {
   final Widget body;
   final PageController _pageController = PageController(initialPage: 1);
 
-  HackerNewserNavigation(this.body, {Key? key}) : super(key: key);
+  HackerNewserNavigation(this.body, {super.key});
 
   @override
   State<HackerNewserNavigation> createState() => _HackerNewserNavigationState();

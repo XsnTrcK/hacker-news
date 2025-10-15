@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:equatable/equatable.dart';
 
 extension ItemMap on Map<String, dynamic> {
   int get id => this["id"];
@@ -180,10 +179,9 @@ abstract class TitledItem extends Item {
   String title;
   int score;
 
-  TitledItem(int id, int time, String createdBy, ItemState state, this.title,
+  TitledItem(super.id, super.time, super.createdBy, super.state, this.title,
       this.score,
-      {String? text})
-      : super(id, time, createdBy, state, text: text);
+      {super.text});
 
   @override
   Map<String, dynamic> toMap() {
@@ -199,10 +197,9 @@ abstract class ItemWithKids extends TitledItem {
   List<int> childrenIds;
   int numberOfChildren;
 
-  ItemWithKids(int id, int time, String createdBy, ItemState state,
-      String title, int score, this.childrenIds, this.numberOfChildren,
-      {String? text})
-      : super(id, time, createdBy, state, title, score, text: text);
+  ItemWithKids(super.id, super.time, super.createdBy, super.state, super.title,
+      super.score, this.childrenIds, this.numberOfChildren,
+      {super.text});
 
   @override
   Map<String, dynamic> toMap() {
@@ -217,12 +214,9 @@ abstract class ItemWithKids extends TitledItem {
 class StoryItem extends ItemWithKids {
   String url;
 
-  StoryItem(int id, int time, String createdBy, ItemState state, String title,
-      int score, List<int> childrenIds, int numberOfChildren, this.url,
-      {String? text})
-      : super(id, time, createdBy, state, title, score, childrenIds,
-            numberOfChildren,
-            text: text);
+  StoryItem(super.id, super.time, super.createdBy, super.state, super.title,
+      super.score, super.childrenIds, super.numberOfChildren, this.url,
+      {super.text});
 
   @override
   Map<String, dynamic> toMap() {
@@ -235,11 +229,9 @@ class StoryItem extends ItemWithKids {
 }
 
 class AskItem extends ItemWithKids {
-  AskItem(int id, int time, String createdBy, ItemState state, String? text,
-      String title, int score, List<int> childrenIds, int numberOfChildren)
-      : super(id, time, createdBy, state, title, score, childrenIds,
-            numberOfChildren,
-            text: text);
+  AskItem(super.id, super.time, super.createdBy, super.state, String? text,
+      super.title, super.score, super.childrenIds, super.numberOfChildren)
+      : super(text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -254,19 +246,17 @@ class PollItem extends ItemWithKids {
   List<int> pollOptionIds;
 
   PollItem(
-      int id,
-      int time,
-      String createdBy,
-      ItemState state,
+      super.id,
+      super.time,
+      super.createdBy,
+      super.state,
       String text,
-      String title,
-      int score,
-      List<int> childrenIds,
-      int numberOfChildren,
+      super.title,
+      super.score,
+      super.childrenIds,
+      super.numberOfChildren,
       this.pollOptionIds)
-      : super(id, time, createdBy, state, title, score, childrenIds,
-            numberOfChildren,
-            text: text);
+      : super(text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -281,9 +271,8 @@ class PollItem extends ItemWithKids {
 class JobItem extends TitledItem {
   String url;
 
-  JobItem(int id, int time, String createdBy, ItemState state, String title,
-      int score, this.url)
-      : super(id, time, createdBy, state, title, score);
+  JobItem(super.id, super.time, super.createdBy, super.state, super.title,
+      super.score, this.url);
 
   @override
   Map<String, dynamic> toMap() {
@@ -299,9 +288,9 @@ class PollOptionItem extends Item {
   int score;
   int relatedPollId;
 
-  PollOptionItem(int id, int time, String createdBy, ItemState state,
+  PollOptionItem(super.id, super.time, super.createdBy, super.state,
       String text, this.score, this.relatedPollId)
-      : super(id, time, createdBy, state, text: text);
+      : super(text: text);
 
   @override
   Map<String, dynamic> toMap() {
@@ -320,9 +309,9 @@ class CommentItem extends Item {
   bool isDeleted;
   bool isDead;
 
-  CommentItem(int id, int time, String createdBy, ItemState state, String text,
+  CommentItem(super.id, super.time, super.createdBy, super.state, String text,
       this.childrenIds, this.parentId, this.isDeleted, this.isDead)
-      : super(id, time, createdBy, state, text: text);
+      : super(text: text);
 
   @override
   Map<String, dynamic> toMap() {

@@ -12,11 +12,11 @@ class ItemDetails extends StatelessWidget {
 
   const ItemDetails(
     this.item, {
-    Key? key,
+    super.key,
     this.overflow,
     this.minimalTitle = false,
     this.expand = true,
-  }) : super(key: key);
+  });
 
   String rightItemDetails(TitledItem item) {
     var itemDetails = "Score: ${item.score}";

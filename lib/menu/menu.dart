@@ -12,7 +12,7 @@ import 'package:hackernews/services/theme_extensions.dart';
 import 'package:hackernews/settings/views/settings.dart';
 
 class Menu extends StatelessWidget {
-  const Menu({Key? key}) : super(key: key);
+  const Menu({super.key});
 
   Widget _createNewsPage() {
     return ScaffoldPage(

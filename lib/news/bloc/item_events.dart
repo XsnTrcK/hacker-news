@@ -6,13 +6,13 @@ abstract class ItemEvent<T extends Item> {
 }
 
 class SaveToReadLaterEvent<T extends Item> extends ItemEvent<T> {
-  const SaveToReadLaterEvent(T item) : super(item);
+  const SaveToReadLaterEvent(super.item);
 }
 
 class HasBeenReadEvent<T extends Item> extends ItemEvent<T> {
-  const HasBeenReadEvent(T item) : super(item);
+  const HasBeenReadEvent(super.item);
 }
 
 class DisplayReaderModeEvent<T extends Item> extends ItemEvent<T> {
-  const DisplayReaderModeEvent(T item) : super(item);
+  const DisplayReaderModeEvent(super.item);
 }

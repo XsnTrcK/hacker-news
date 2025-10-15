@@ -9,8 +9,7 @@ class WebView extends StatelessWidget {
   final bool eager;
 
   const WebView(this.url, this._displayReaderMode,
-      {Key? key, this.eager = true})
-      : super(key: key);
+      {super.key, this.eager = true});
 
   @override
   Widget build(BuildContext context) {

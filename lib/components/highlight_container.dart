@@ -5,8 +5,7 @@ class HighlightContainer extends StatelessWidget {
   final bool isSelected;
 
   const HighlightContainer(
-      {required this.child, required this.isSelected, Key? key})
-      : super(key: key);
+      {required this.child, required this.isSelected, super.key});
 
   Widget _createDivider(FluentThemeData theme) {
     return Row(

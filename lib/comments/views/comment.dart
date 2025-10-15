@@ -11,12 +11,12 @@ class Comment extends StatefulWidget {
 
   const Comment(
     this.commentItem, {
-    Key? key,
+    super.key,
     this.isExpanded = true,
-  }) : super(key: key);
+  });
 
   @override
-  _CommentState createState() => _CommentState();
+  State<Comment> createState() => _CommentState();
 }
 
 class _CommentState extends State<Comment> {

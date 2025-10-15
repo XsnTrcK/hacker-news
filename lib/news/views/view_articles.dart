@@ -6,8 +6,7 @@ class ViewArticles extends StatelessWidget {
   final List<TitledItem> _articles;
   final int? initialIndex;
 
-  const ViewArticles(this._articles, {Key? key, this.initialIndex})
-      : super(key: key);
+  const ViewArticles(this._articles, {super.key, this.initialIndex});
 
   @override
   Widget build(BuildContext context) {

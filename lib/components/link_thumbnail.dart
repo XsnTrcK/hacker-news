@@ -13,13 +13,13 @@ class LinkThumbnail extends StatelessWidget {
   final bool showErrorIcon;
 
   const LinkThumbnail({
-    Key? key,
+    super.key,
     required this.url,
     this.useFavicon = false,
     this.padding = const EdgeInsets.all(0),
     this.returnFlexible = false,
     this.showErrorIcon = false,
-  }) : super(key: key);
+  });
 
   IconData _getReplacementIcon(String host) {
     var firstChar = host.toLowerCase().replaceAll('www.', '')[0];

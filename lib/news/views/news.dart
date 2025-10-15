@@ -9,10 +9,10 @@ import 'package:hackernews/news/bloc/news_state.dart';
 import 'package:hackernews/news/views/view_articles.dart';
 
 class News extends StatefulWidget {
-  const News({Key? key}) : super(key: key);
+  const News({super.key});
 
   @override
-  _NewsState createState() => _NewsState();
+  State<News> createState() => _NewsState();
 }
 
 class _NewsState extends State<News> {

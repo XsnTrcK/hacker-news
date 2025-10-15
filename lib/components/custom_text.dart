@@ -10,12 +10,12 @@ class CustomText extends StatelessWidget {
 
   const CustomText(
     this.text, {
-    Key? key,
+    super.key,
     this.padding = const EdgeInsets.symmetric(horizontal: 5),
     this.alignment = Alignment.centerLeft,
     this.style,
     this.overflow,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

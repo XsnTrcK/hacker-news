@@ -6,9 +6,9 @@ abstract class NewsEvent {
 }
 
 class FetchNews extends NewsEvent {
-  const FetchNews(NewsType newsType) : super(newsType);
+  const FetchNews(super.newsType);
 }
 
 class RefreshNews extends NewsEvent {
-  const RefreshNews(NewsType newsType) : super(newsType);
+  const RefreshNews(super.newsType);
 }

@@ -29,7 +29,7 @@ Client get httpClient {
 class SavedArticlesRetriever extends NewsApi {
   late List<int> _savedNews = [];
 
-  SavedArticlesRetriever(Client client) : super(client) {
+  SavedArticlesRetriever(super.client) {
     _updateSavedNews();
   }
 
@@ -69,7 +69,7 @@ class SavedArticlesRetriever extends NewsApi {
 class NewsApiRetriever extends NewsApi {
   final Map<NewsType, List<int>> _newsIdsMap = {};
 
-  NewsApiRetriever(Client httpClient) : super(httpClient);
+  NewsApiRetriever(super.httpClient);
 
   List<int> _convertNewsIds(String newsIdsJson) {
     return (jsonDecode(newsIdsJson) as List<dynamic>).cast<int>();

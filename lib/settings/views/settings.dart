@@ -6,7 +6,7 @@ import 'package:hackernews/settings/bloc/settings_events.dart';
 import 'package:hackernews/store/settings_store.dart';
 
 class Settings extends StatelessWidget {
-  const Settings({Key? key}) : super(key: key);
+  const Settings({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -11,8 +11,7 @@ import 'package:hackernews/models/item.dart';
 class CommentsSection extends StatelessWidget {
   final ItemWithKids itemWithKids;
   final Widget? startWidget;
-  const CommentsSection(this.itemWithKids, {Key? key, this.startWidget})
-      : super(key: key);
+  const CommentsSection(this.itemWithKids, {super.key, this.startWidget});
 
   @override
   Widget build(BuildContext context) {

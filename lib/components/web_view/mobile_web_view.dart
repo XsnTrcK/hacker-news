@@ -14,8 +14,7 @@ class MobileWebView extends StatefulWidget {
   final bool eager;
 
   const MobileWebView(this.url, this._displayReaderMode,
-      {Key? key, this.eager = true})
-      : super(key: key);
+      {super.key, this.eager = true});
 
   @override
   State<MobileWebView> createState() => _MobileWebViewState();

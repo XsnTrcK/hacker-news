@@ -3,10 +3,10 @@ import 'package:webview_windows/webview_windows.dart';
 
 class WindowsWebView extends StatefulWidget {
   final String url;
-  const WindowsWebView(this.url, {Key? key}) : super(key: key);
+  const WindowsWebView(this.url, {super.key});
 
   @override
-  _WindowsWebViewState createState() => _WindowsWebViewState();
+  State<WindowsWebView> createState() => _WindowsWebViewState();
 }
 
 class _WindowsWebViewState extends State<WindowsWebView> {

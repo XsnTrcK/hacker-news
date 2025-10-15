@@ -57,9 +57,11 @@ class CommentsApiRetriever implements CommentsHandler {
   Future<List<CommentItem>> fetchComments(ItemWithKids itemWithKids) async {
     if (itemWithKids.childrenIds.isEmpty) return [];
     var results = await Future.wait(
-        itemWithKids.childrenIds.map((childId) => _downloadComment(childId)));
+      itemWithKids.childrenIds.map((childId) => _downloadComment(childId)),
+    );
     await Future.wait(
-        results.map((childComment) => _fetchComments(childComment)));
+      results.map((childComment) => _fetchComments(childComment)),
+    );
 
     return results;
   }
@@ -67,9 +69,11 @@ class CommentsApiRetriever implements CommentsHandler {
   Future _fetchComments(CommentItem commentItem) async {
     if (commentItem.childrenIds.isEmpty) return;
     var results = await Future.wait(
-        commentItem.childrenIds.map((childId) => _downloadComment(childId)));
+      commentItem.childrenIds.map((childId) => _downloadComment(childId)),
+    );
     await Future.wait(
-        results.map((childComment) => _fetchComments(childComment)));
+      results.map((childComment) => _fetchComments(childComment)),
+    );
   }
 
   @override

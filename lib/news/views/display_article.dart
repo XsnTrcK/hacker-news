@@ -21,7 +21,7 @@ class DisplayArticle extends StatefulWidget {
   static final PanelController _panelController = PanelController();
   final TitledItem item;
 
-  const DisplayArticle(this.item, {Key? key}) : super(key: key);
+  const DisplayArticle(this.item, {super.key});
 
   @override
   State<DisplayArticle> createState() => _DisplayArticle();
