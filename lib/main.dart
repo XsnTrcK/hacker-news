@@ -18,6 +18,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   await Hive.initFlutter();
+  await initSettings();
   await getCommentsHandler(client: httpClient).init();
   runApp(const MyApp());
 }
@@ -33,7 +34,7 @@ class _MyAppState extends State<MyApp> {
   Widget _createNewsPage() {
     return FutureBuilder(
       future: Future.wait(
-        [initSettings(), initNewsStore()],
+        [initNewsStore()],
       ),
       builder: (context, AsyncSnapshot<void> snapshot) {
         if (snapshot.hasData) {
@@ -65,7 +66,7 @@ class _MyAppState extends State<MyApp> {
                 Colors.white, Colors.black, accentColor, accentColor.lightest),
             darkTheme: FluentThemeData.dark().createFluentTheme(
                 Colors.black, Colors.white, accentColor, accentColor.darkest),
-            themeMode: ThemeMode.system,
+            themeMode: settings.themeMode,
             home: _createNewsPage(),
           );
         },
