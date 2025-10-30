@@ -165,7 +165,9 @@ class _MobileWebViewState extends State<MobileWebView> {
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
     _readerViewStyle = theme.readerViewStyle;
-    _controller.setBackgroundColor(theme.scaffoldBackgroundColor);
+    _controller.setBackgroundColor(widget._displayReaderMode
+        ? theme.scaffoldBackgroundColor
+        : Colors.white);
 
     return material.Scaffold(
       body: WebViewWidget(
