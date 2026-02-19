@@ -30,7 +30,7 @@ class _MobileWebViewState extends State<MobileWebView> {
   late WebViewController _controller;
 
   String get url {
-    if (widget._url.startsWith('http')) {
+    if (widget._url.startsWith('http:')) {
       return widget._url.replaceFirst("http:", "https:");
     }
     return widget._url;
