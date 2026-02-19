@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:hackernews/services/theme_extensions.dart';
 import 'package:hackernews/settings/bloc/settings_bloc.dart';
 import 'package:hackernews/settings/bloc/settings_events.dart';
@@ -89,6 +90,133 @@ class Settings extends StatelessWidget {
             ),
           ),
           const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 5,
+            ),
+            child: Row(
+              children: [
+                Text(
+                  "News Type Position:",
+                  style: typography.bodyStrong,
+                ),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Left"),
+                          checked:
+                              settings.fabPosition == ExpandableFabPos.left,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateFabPositionEvent(
+                                      ExpandableFabPos.left));
+                            }
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Center"),
+                          checked:
+                              settings.fabPosition == ExpandableFabPos.center,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateFabPositionEvent(
+                                      ExpandableFabPos.center));
+                            }
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Right"),
+                          checked:
+                              settings.fabPosition == ExpandableFabPos.right,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateFabPositionEvent(
+                                      ExpandableFabPos.right));
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 5,
+            ),
+            child: Row(
+              children: [
+                Text(
+                  "Theme Mode:",
+                  style: typography.bodyStrong,
+                ),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("System"),
+                          checked: settings.themeMode == ThemeMode.system,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateThemeModeEvent(ThemeMode.system));
+                            }
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Dark"),
+                          checked: settings.themeMode == ThemeMode.dark,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateThemeModeEvent(ThemeMode.dark));
+                            }
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Light"),
+                          checked: settings.themeMode == ThemeMode.light,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateThemeModeEvent(ThemeMode.light));
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

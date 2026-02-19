@@ -7,13 +7,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:hackernews/services/theme_extensions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/material.dart' as material;
 
 class MobileWebView extends StatefulWidget {
-  final String url;
+  final String _url;
   final bool _displayReaderMode;
   final bool eager;
 
-  const MobileWebView(this.url, this._displayReaderMode,
+  const MobileWebView(this._url, this._displayReaderMode,
       {super.key, this.eager = true});
 
   @override
@@ -24,8 +25,16 @@ class _MobileWebViewState extends State<MobileWebView> {
   final RegExp _localStyleRegExp = RegExp('style="[a-zA-Z0-9#:%;\\s-]+"');
   final RegExp _navTagsRegExp = RegExp(r'<nav[a-zA-Z"=\s-]*>.*<\/nav>');
   String _downloadedHtml = '';
+  bool canGoBack = false;
   late String _readerViewStyle;
   late WebViewController _controller;
+
+  String get url {
+    if (widget._url.startsWith('http:')) {
+      return widget._url.replaceFirst("http:", "https:");
+    }
+    return widget._url;
+  }
 
   @override
   void initState() {
@@ -39,11 +48,16 @@ class _MobileWebViewState extends State<MobileWebView> {
             if (!widget._displayReaderMode) return;
             await _controller.loadHtmlString(
                 "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}",
-                baseUrl: widget.url);
+                baseUrl: url);
+          });
+        },
+        onUrlChange: (urlChange) {
+          setState(() {
+            canGoBack = urlChange.url != null && urlChange.url != url;
           });
         },
       ))
-      ..loadRequest(Uri.parse(widget.url));
+      ..loadRequest(Uri.parse(url));
     super.initState();
   }
 
@@ -141,9 +155,9 @@ class _MobileWebViewState extends State<MobileWebView> {
     if (widget._displayReaderMode) {
       final htmlString =
           "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}";
-      _controller.loadHtmlString(htmlString, baseUrl: widget.url);
+      _controller.loadHtmlString(htmlString, baseUrl: url);
     } else {
-      _controller.loadRequest(Uri.parse(widget.url));
+      _controller.loadRequest(Uri.parse(url));
     }
   }
 
@@ -155,11 +169,22 @@ class _MobileWebViewState extends State<MobileWebView> {
         ? theme.scaffoldBackgroundColor
         : Colors.white);
 
-    return WebViewWidget(
-      controller: _controller,
-      gestureRecognizers: widget.eager
-          ? {Factory(() => EagerGestureRecognizer())}
-          : {Factory(() => PanGestureRecognizer())},
+    return material.Scaffold(
+      body: WebViewWidget(
+        controller: _controller,
+        gestureRecognizers: widget.eager
+            ? {Factory(() => EagerGestureRecognizer())}
+            : {Factory(() => PanGestureRecognizer())},
+      ),
+      floatingActionButton: canGoBack
+          ? material.FloatingActionButton.small(
+              onPressed: () {
+                _controller.goBack();
+              },
+              shape: CircleBorder(),
+              child: const Icon(FluentIcons.back),
+            )
+          : null,
     );
   }
 }
