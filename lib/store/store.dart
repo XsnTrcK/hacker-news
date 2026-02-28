@@ -11,7 +11,7 @@ abstract class Store<T> {
   bool containsKey<TKey>(TKey key);
 }
 
-abstract class ItemUpdater<T> {
+abstract mixin class ItemUpdater<T> {
   final String _savedItemsKey = "savedItems";
   late List<int> savedItems = [];
 
