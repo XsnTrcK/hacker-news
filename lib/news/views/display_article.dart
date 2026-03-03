@@ -31,7 +31,6 @@ class DisplayArticle extends StatefulWidget {
 class _DisplayArticle extends State<DisplayArticle> {
   final GlobalKey<State<DisplayArticle>> _collapsedKey = GlobalKey();
   Size _collapsedSize = const Size(0, 0);
-  int? _panelOpenedForChildId;
 
   Widget _createButtonsRow(
       TitledItem item, BuildContext context, bool collapsed) {
@@ -120,15 +119,6 @@ class _DisplayArticle extends State<DisplayArticle> {
     );
   }
 
-  @override
-  void didUpdateWidget(DisplayArticle oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Reset so the panel reopens when navigating to a different child comment.
-    if (widget.childId != oldWidget.childId) {
-      _panelOpenedForChildId = null;
-    }
-  }
-
   void _postFrameCallback(_) {
     var context = _collapsedKey.currentContext;
     if (context == null) return;
@@ -167,8 +157,7 @@ class _DisplayArticle extends State<DisplayArticle> {
                 SchedulerBinding.instance
                     .addPostFrameCallback(_postFrameCallback);
                 var storyItem = state.item as StoryItem;
-                if (widget.childId != null && widget.childId != _panelOpenedForChildId) {
-                  _panelOpenedForChildId = widget.childId;
+                if (widget.childId != null) {
                   SchedulerBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
                       DisplayArticle._panelController.open();
