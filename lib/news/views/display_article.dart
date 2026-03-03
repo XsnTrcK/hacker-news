@@ -20,8 +20,9 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 class DisplayArticle extends StatefulWidget {
   static final PanelController _panelController = PanelController();
   final TitledItem item;
+  final int? childId;
 
-  const DisplayArticle(this.item, {super.key});
+  const DisplayArticle(this.item, {super.key, this.childId});
 
   @override
   State<DisplayArticle> createState() => _DisplayArticle();
@@ -95,6 +96,7 @@ class _DisplayArticle extends State<DisplayArticle> {
         child: CommentsSection(
           item,
           startWidget: textHtml,
+          childIdRoot: widget.childId,
         ),
       );
     }
@@ -155,6 +157,13 @@ class _DisplayArticle extends State<DisplayArticle> {
                 SchedulerBinding.instance
                     .addPostFrameCallback(_postFrameCallback);
                 var storyItem = state.item as StoryItem;
+                if (widget.childId != null) {
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      DisplayArticle._panelController.open();
+                    }
+                  });
+                }
                 return SlidingUpPanel(
                   controller: DisplayArticle._panelController,
                   onPanelOpened: () {

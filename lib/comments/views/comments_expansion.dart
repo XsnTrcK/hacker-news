@@ -7,7 +7,9 @@ import 'package:hackernews/services/theme_extensions.dart';
 
 class CommentsExpansion extends StatefulWidget {
   final int commentId;
-  const CommentsExpansion(this.commentId, {super.key});
+  final bool highlighted;
+  const CommentsExpansion(this.commentId,
+      {super.key, this.highlighted = false});
 
   @override
   State<CommentsExpansion> createState() => _CommentsExpansionState();
@@ -25,42 +27,55 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
 
   Widget itemBuilder(CommentItem comment, fluent_ui.FluentThemeData theme) {
     _isExpanded = comment.state.isExpanded;
-    return ExpansionTile(
-      shape: Border.all(
-        width: 0,
-        color: const Color.fromARGB(0, 0, 0, 0),
-      ),
-      expandedAlignment: Alignment.centerLeft,
-      expandedCrossAxisAlignment: CrossAxisAlignment.start,
-      maintainState: true,
-      tilePadding: const EdgeInsets.symmetric(horizontal: 0),
-      textColor: theme.textColor,
-      initiallyExpanded: _isExpanded,
-      onExpansionChanged: (expanded) {
-        comment.state.isExpanded = expanded;
-        _commentsHandler.updateComment(comment);
-        setState(() => _isExpanded = expanded);
-      },
-      title: Comment(
-        comment,
-        isExpanded: _isExpanded,
-      ),
-      children: comment.childrenIds
-          .map(
-            (id) => Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  left: BorderSide(
-                    color: theme.textColor.withValues(alpha: .3),
-                    width: 1,
+    return Container(
+      decoration: widget.highlighted
+          ? BoxDecoration(
+              color: theme.accentColor.withValues(alpha: .08),
+              border: Border(
+                left: BorderSide(color: theme.accentColor, width: 2),
+              ),
+            )
+          : null,
+      child: ExpansionTile(
+        shape: Border.all(
+          width: 0,
+          color: const Color.fromARGB(0, 0, 0, 0),
+        ),
+        expandedAlignment: Alignment.centerLeft,
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        maintainState: true,
+        tilePadding: const EdgeInsets.symmetric(horizontal: 0),
+        textColor: theme.textColor,
+        initiallyExpanded: _isExpanded,
+        onExpansionChanged: (expanded) {
+          comment.state.isExpanded = expanded;
+          _commentsHandler.updateComment(comment);
+          setState(() => _isExpanded = expanded);
+        },
+        title: Container(
+          padding: widget.highlighted ? const EdgeInsets.only(left: 3) : null,
+          child: Comment(
+            comment,
+            isExpanded: _isExpanded,
+          ),
+        ),
+        children: comment.childrenIds
+            .map(
+              (id) => Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    left: BorderSide(
+                      color: theme.textColor.withValues(alpha: .3),
+                      width: 1,
+                    ),
                   ),
                 ),
+                padding: const EdgeInsets.only(left: 20),
+                child: CommentsExpansion(id),
               ),
-              padding: const EdgeInsets.only(left: 20),
-              child: CommentsExpansion(id),
-            ),
-          )
-          .toList(),
+            )
+            .toList(),
+      ),
     );
   }
 
