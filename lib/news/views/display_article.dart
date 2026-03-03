@@ -158,7 +158,11 @@ class _DisplayArticle extends State<DisplayArticle> {
                     .addPostFrameCallback(_postFrameCallback);
                 var storyItem = state.item as StoryItem;
                 if (widget.childId != null) {
-                  DisplayArticle._panelController.open();
+                  SchedulerBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      DisplayArticle._panelController.open();
+                    }
+                  });
                 }
                 return SlidingUpPanel(
                   controller: DisplayArticle._panelController,
