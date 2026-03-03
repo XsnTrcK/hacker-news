@@ -64,7 +64,7 @@ class LinkHandler {
 
     var uri = Uri.tryParse(url);
     if (uri == null) return (null, null);
-    if (uri.host.contains("ycombinator") && uri.path.contains("item")) {
+    if (uri.host == "news.ycombinator.com" && uri.path.contains("item")) {
       var itemId = int.tryParse(uri.queryParameters["id"] ?? "");
       if (itemId != null) {
         final item = await _fetchItem(itemId);
