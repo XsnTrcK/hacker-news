@@ -11,29 +11,26 @@ class ImageListItem extends StatelessWidget {
   const ImageListItem(this.item, {super.key, this.maxHeight});
 
   Widget _createUrlInfo() {
-    switch (item.runtimeType) {
-      case StoryItem:
-      case JobItem:
-        final stringUrl = (item as dynamic).url as String?;
-        if (stringUrl == null) return const SizedBox.shrink();
-        final url = Uri.parse((item as dynamic).url);
-        return Expanded(
-          child: Row(
-            children: [
-              LinkThumbnail(
-                url: url.toString(),
-                useFavicon: true,
-                padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-              ),
-              Expanded(
-                child: CustomText(url.host),
-              ),
-            ],
-          ),
-        );
-      default:
-        return const SizedBox.shrink();
+    if (item is StoryItem || item is JobItem) {
+      final stringUrl = (item as dynamic).url as String?;
+      if (stringUrl == null) return const SizedBox.shrink();
+      final url = Uri.parse(stringUrl);
+      return Expanded(
+        child: Row(
+          children: [
+            LinkThumbnail(
+              url: url.toString(),
+              useFavicon: true,
+              padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+            ),
+            Expanded(
+              child: CustomText(url.host),
+            ),
+          ],
+        ),
+      );
     }
+    return const SizedBox.shrink();
   }
 
   Widget _createDetails() {
@@ -53,24 +50,21 @@ class ImageListItem extends StatelessWidget {
 
   Widget _createListView() {
     final details = _createDetails();
-    switch (item.runtimeType) {
-      case StoryItem:
-      case JobItem:
-        final String? url = (item as dynamic).url;
-        if (url == null) return details;
-        return Row(
-          children: [
-            Expanded(flex: 3, child: details),
-            LinkThumbnail(
-              url: url,
-              returnFlexible: true,
-              showErrorIcon: true,
-            ),
-          ],
-        );
-      default:
-        return details;
+    if (item is StoryItem || item is JobItem) {
+      final String? url = (item as dynamic).url;
+      if (url == null) return details;
+      return Row(
+        children: [
+          Expanded(flex: 3, child: details),
+          LinkThumbnail(
+            url: url,
+            returnFlexible: true,
+            showErrorIcon: true,
+          ),
+        ],
+      );
     }
+    return details;
   }
 
   @override

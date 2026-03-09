@@ -12,6 +12,9 @@ import 'package:hackernews/models/item.dart';
 import 'package:hackernews/news/bloc/item_bloc.dart';
 import 'package:hackernews/news/bloc/item_events.dart';
 import 'package:hackernews/news/bloc/item_state.dart';
+import 'package:hackernews/news/apis/news_api.dart';
+import 'package:hackernews/rss/apis/hn_search_api.dart';
+import 'package:hackernews/rss/models/rss_story_item.dart';
 import 'package:hackernews/services/link_handler.dart';
 import 'package:hackernews/store/settings_store.dart';
 import 'package:hackernews/store/store.dart';
@@ -31,6 +34,22 @@ class DisplayArticle extends StatefulWidget {
 class _DisplayArticle extends State<DisplayArticle> {
   final GlobalKey<State<DisplayArticle>> _collapsedKey = GlobalKey();
   Size _collapsedSize = const Size(0, 0);
+  ItemWithKids? _hnMatch;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.item is RssStoryItem) {
+      HnSearchApi.findHnItemForUrl(
+        (widget.item as RssStoryItem).url,
+        httpClient,
+      ).then((match) {
+        if (mounted && match != null) {
+          setState(() => _hnMatch = match);
+        }
+      });
+    }
+  }
 
   Widget _createButtonsRow(
       TitledItem item, BuildContext context, bool collapsed) {
@@ -49,7 +68,7 @@ class _DisplayArticle extends State<DisplayArticle> {
         )),
         Expanded(
           flex: 8,
-          child: item is ItemWithKids && item is StoryItem
+          child: (item is StoryItem && item.numberOfChildren > 0)
               ? IconButton(
                   icon: Icon(collapsed
                       ? FluentIcons.chevron_up_small
@@ -91,10 +110,12 @@ class _DisplayArticle extends State<DisplayArticle> {
             ),
           )
         : null;
-    if (item is ItemWithKids) {
+    final commentsItem =
+        item is RssStoryItem ? _hnMatch : (item is ItemWithKids ? item : null);
+    if (commentsItem != null) {
       return Expanded(
         child: CommentsSection(
-          item,
+          commentsItem,
           startWidget: textHtml,
           childIdRoot: widget.childId,
         ),
@@ -119,7 +140,7 @@ class _DisplayArticle extends State<DisplayArticle> {
     );
   }
 
-  void _postFrameCallback(_) {
+  void _postFrameCallback(Duration _) {
     var context = _collapsedKey.currentContext;
     if (context == null) return;
 
@@ -165,6 +186,8 @@ class _DisplayArticle extends State<DisplayArticle> {
                   });
                 }
                 return SlidingUpPanel(
+                  isDraggable:
+                      state.item is StoryItem && storyItem.numberOfChildren > 0,
                   controller: DisplayArticle._panelController,
                   onPanelOpened: () {
                     if (!DisplayArticle._panelController.isPanelOpen) {
@@ -217,7 +240,6 @@ class _DisplayArticle extends State<DisplayArticle> {
       case SettingsFontSize.medium:
         return 80;
       case SettingsFontSize.small:
-      default:
         return 77;
     }
   }

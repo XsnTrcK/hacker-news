@@ -6,6 +6,8 @@ import 'package:hackernews/comments/apis/comments_api.dart';
 import 'package:hackernews/components/hacker_newser_navigation.dart';
 import 'package:hackernews/news/apis/news_api.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
+import 'package:hackernews/rss/apis/combined_news_api.dart';
+import 'package:hackernews/rss/store/rss_feeds_store.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
 import 'package:hackernews/news/views/news.dart';
@@ -34,13 +36,13 @@ class _MyAppState extends State<MyApp> {
   Widget _createNewsPage() {
     return FutureBuilder(
       future: Future.wait(
-        [initNewsStore()],
+        [initNewsStore(), initRssFeedsStore()],
       ),
       builder: (context, AsyncSnapshot<void> snapshot) {
         if (snapshot.hasData) {
           return BlocProvider(
             create: (_) =>
-                NewsBloc(newsApiRetriever)..add(const FetchNews(NewsType.top)),
+                NewsBloc(combinedNewsApiRetriever)..add(const FetchNews(NewsType.top)),
             child: HackerNewserNavigation(const News()),
           );
         } else if (snapshot.hasError) {

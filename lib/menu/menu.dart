@@ -4,6 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/components/labeled_icon_button.dart';
 import 'package:hackernews/news/apis/news_api.dart';
+import 'package:hackernews/rss/bloc/rss_feeds_bloc.dart';
+import 'package:hackernews/rss/views/rss_feeds_page.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
@@ -57,6 +60,18 @@ class Menu extends StatelessWidget {
           onPressed: _handleClick(context, () => _createNewsPage()),
           icon: FluentIcons.single_bookmark_solid,
           label: "Saved Articles",
+        ),
+        const Divider(),
+        LabeledIconButton(
+          onPressed: _handleClick(
+            context,
+            () => BlocProvider(
+              create: (_) => RssFeedsBloc(),
+              child: const RssFeedsPage(),
+            ),
+          ),
+          icon: MdiIcons.rss,
+          label: "RSS Feeds",
         ),
         const Divider(),
         LabeledIconButton(
