@@ -25,11 +25,6 @@ class CombinedNewsApiRetriever extends NewsApi {
   @override
   Future<List<TitledItem>> getNews(NewsType newsType,
       {int count = 50, int offset = 0}) async {
-    if (offset == 0) {
-      _hnItemsFetched = [];
-      _hnExhausted = false;
-    }
-
     // Fetch one page of HN items to grow the pool, then slice from the
     // full combined + sorted pool by offset/count.
     if (!_hnExhausted) {
