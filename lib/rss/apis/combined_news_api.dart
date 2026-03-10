@@ -30,11 +30,9 @@ class CombinedNewsApiRetriever extends NewsApi {
       _hnExhausted = false;
     }
 
-    // Only fetch more HN items if the current pool doesn't already have
-    // enough items to serve this page; then slice from the full combined
-    // + sorted pool by offset/count.
-    final poolSize = _hnItemsFetched.length + _cachedRssItems.length;
-    if (!_hnExhausted && poolSize < offset + count) {
+    // Fetch one page of HN items to grow the pool, then slice from the
+    // full combined + sorted pool by offset/count.
+    if (!_hnExhausted) {
       final hnItems = await _hnApi.getNews(
         newsType,
         count: count,
