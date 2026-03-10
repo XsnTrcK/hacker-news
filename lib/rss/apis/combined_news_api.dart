@@ -30,12 +30,9 @@ class CombinedNewsApiRetriever extends NewsApi {
       _hnExhausted = false;
     }
 
-    // Fetch more HN items until the combined pool is large enough to serve
-    // the requested page, or the HN feed is exhausted.
-    while (!_hnExhausted) {
-      final poolSize = _cachedRssItems.length + _hnItemsFetched.length;
-      if (poolSize >= offset + count) break;
-
+    // Fetch one page of HN items to grow the pool, then slice from the
+    // full combined + sorted pool by offset/count.
+    if (!_hnExhausted) {
       final hnItems = await _hnApi.getNews(
         newsType,
         count: count,
@@ -43,9 +40,9 @@ class CombinedNewsApiRetriever extends NewsApi {
       );
       if (hnItems.isEmpty) {
         _hnExhausted = true;
-        break;
+      } else {
+        _hnItemsFetched.addAll(hnItems);
       }
-      _hnItemsFetched.addAll(hnItems);
     }
 
     final pool = <TitledItem>[..._cachedRssItems, ..._hnItemsFetched];
