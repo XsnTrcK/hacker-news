@@ -8,11 +8,13 @@ class CombinedNewsApiRetriever extends NewsApi {
   final NewsApiRetriever _hnApi;
   final RssApiRetriever _rssApi;
   List<RssStoryItem> _cachedRssItems = [];
+  int _hnOffset = 0;
 
   CombinedNewsApiRetriever(this._hnApi, this._rssApi) : super(httpClient);
 
   @override
   Future<void> refresh(NewsType newsType) async {
+    _hnOffset = 0;
     await Future.wait([
       _hnApi.refresh(newsType),
       _rssApi.fetchAllFeeds().then((items) => _cachedRssItems = items),
@@ -22,13 +24,20 @@ class CombinedNewsApiRetriever extends NewsApi {
   @override
   Future<List<TitledItem>> getNews(NewsType newsType,
       {int count = 50, int offset = 0}) async {
-    final hnItems =
-        await _hnApi.getNews(newsType, count: count, offset: offset);
     if (offset == 0) {
+      _hnOffset = 0;
+      final hnItems =
+          await _hnApi.getNews(newsType, count: count, offset: 0);
       final combined = <TitledItem>[..._cachedRssItems, ...hnItems];
       combined.sort((a, b) => b.time.compareTo(a.time));
-      return combined;
+      final page = combined.take(count).toList();
+      final rssCount = page.whereType<RssStoryItem>().length;
+      _hnOffset = page.length - rssCount;
+      return page;
     }
+    final hnItems =
+        await _hnApi.getNews(newsType, count: count, offset: _hnOffset);
+    _hnOffset += hnItems.length;
     return hnItems;
   }
 }
