@@ -55,6 +55,10 @@ dependencies:
   any_link_preview: ^3.0.2
   url_launcher: ^6.3.1
   flutter_expandable_fab: ^2.5.2
+  dart_rss: ^3.0.0
+
+dependency_overrides:
+  intl: "0.20.2" # Fixes dependency conflict between dart_rss and fluent_ui
 
 dev_dependencies:
   flutter_test:
