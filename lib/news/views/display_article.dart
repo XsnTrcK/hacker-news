@@ -36,6 +36,15 @@ class _DisplayArticle extends State<DisplayArticle> {
   Size _collapsedSize = const Size(0, 0);
   ItemWithKids? _hnMatch;
 
+  ItemWithKids? _commentItem(TitledItem item) {
+    if (item is RssStoryItem) {
+      return _hnMatch;
+    } else if (item is ItemWithKids) {
+      return item;
+    }
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +62,7 @@ class _DisplayArticle extends State<DisplayArticle> {
 
   Widget _createButtonsRow(
       TitledItem item, BuildContext context, bool collapsed) {
+    final comentItem = _commentItem(item);
     return Row(
       children: [
         Expanded(
@@ -68,7 +78,7 @@ class _DisplayArticle extends State<DisplayArticle> {
         )),
         Expanded(
           flex: 8,
-          child: (item is StoryItem && item.numberOfChildren > 0)
+          child: (comentItem != null && comentItem.numberOfChildren > 0)
               ? IconButton(
                   icon: Icon(collapsed
                       ? FluentIcons.chevron_up_small
@@ -110,8 +120,7 @@ class _DisplayArticle extends State<DisplayArticle> {
             ),
           )
         : null;
-    final commentsItem =
-        item is RssStoryItem ? _hnMatch : (item is ItemWithKids ? item : null);
+    final commentsItem = _commentItem(item);
     if (commentsItem != null) {
       return Expanded(
         child: CommentsSection(
@@ -185,11 +194,10 @@ class _DisplayArticle extends State<DisplayArticle> {
                     }
                   });
                 }
+                final comentItem = _commentItem(storyItem);
                 return SlidingUpPanel(
                   isDraggable:
-                      (_hnMatch != null && _hnMatch!.numberOfChildren > 0) ||
-                          (state.item is StoryItem &&
-                              storyItem.numberOfChildren > 0),
+                      comentItem != null && comentItem.numberOfChildren > 0,
                   controller: DisplayArticle._panelController,
                   onPanelOpened: () {
                     if (!DisplayArticle._panelController.isPanelOpen) {
