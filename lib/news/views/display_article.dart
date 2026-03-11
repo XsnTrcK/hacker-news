@@ -187,7 +187,7 @@ class _DisplayArticle extends State<DisplayArticle> {
                 }
                 return SlidingUpPanel(
                   isDraggable:
-                      (_hnMatch != null || storyItem.numberOfChildren > 0) ||
+                      (_hnMatch != null && _hnMatch!.numberOfChildren > 0) ||
                           (state.item is StoryItem &&
                               storyItem.numberOfChildren > 0),
                   controller: DisplayArticle._panelController,
