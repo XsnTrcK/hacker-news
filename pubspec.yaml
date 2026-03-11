@@ -58,7 +58,7 @@ dependencies:
   dart_rss: ^3.0.0
 
 dependency_overrides:
-  intl: "0.20.2"
+  intl: "0.20.2" # Fixes dependency conflict between dart_rss and fluent_ui
 
 dev_dependencies:
   flutter_test:

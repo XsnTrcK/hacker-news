@@ -15,7 +15,7 @@ class RssStoryItem extends StoryItem {
     this.hnItemId,
   }) : super(id, time, createdBy, state, title, 0, [], 0, url);
 
-  /// Returns a stable, negative hash so RSS IDs never collide with positive HN IDs.
+  /// Returns a stable hash so RSS IDs never collide with HN IDs.
   static int stableHash(String s) {
     var h = 0;
     for (final c in s.codeUnits) {

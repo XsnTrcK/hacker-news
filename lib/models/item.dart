@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:hackernews/rss/models/rss_story_item.dart';
+
 extension ItemMap on Map<String, dynamic> {
   int get id => this["id"];
   int get time => this["time"];
@@ -20,6 +22,8 @@ extension ItemMap on Map<String, dynamic> {
   bool get savedForReadLater => this["savedForReadLater"] ?? false;
   bool get hasBeenRead => this["hasBeenRead"] ?? false;
   bool get displayReaderMode => this["displayReaderMode"] ?? true;
+  String get feedName => this["feedName"] ?? '';
+  int? get hnItemId => this["hnItemId"];
 }
 
 class ItemState {
@@ -67,6 +71,17 @@ abstract class Item {
   factory Item.fromJson(String jsonString) {
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
     switch (jsonMap["type"]) {
+      case "rss":
+        return RssStoryItem(
+          id: jsonMap.id,
+          time: jsonMap.time,
+          createdBy: jsonMap.createdBy,
+          state: jsonMap.state,
+          title: jsonMap.title,
+          url: jsonMap.url,
+          feedName: jsonMap.feedName,
+          hnItemId: jsonMap.hnItemId,
+        );
       case "story":
         if (jsonMap.containsKey("url")) {
           return StoryItem(
