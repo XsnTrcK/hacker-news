@@ -1,13 +1,14 @@
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:hackernews/menu/menu.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
+import 'package:hackernews/rss/models/rss_feed.dart';
+import 'package:hackernews/rss/store/rss_feeds_store.dart';
 import 'package:flutter/material.dart';
-import 'package:hackernews/store/settings_store.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class HackerNewserNavigation extends StatefulWidget {
   final Widget body;
@@ -20,46 +21,111 @@ class HackerNewserNavigation extends StatefulWidget {
 }
 
 class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
-  NewsType _newsType = NewsType.top;
-  int _selectedIndex = 1;
+  FeedMode _feedMode = FeedMode.all;
+  NewsType _hnNewsType = NewsType.top;
+  RssFeedInfo? _rssFeedFilter;
 
-  Future<void> _onPressed(NewsType newsType) async {
+  void _onFeedModeChanged(FeedMode mode) {
     setState(() {
-      _selectedIndex = 1;
-      _newsType = newsType;
+      _feedMode = mode;
+      if (mode != FeedMode.rss) _rssFeedFilter = null;
     });
-    context.read<NewsBloc>().add(FetchNews(_newsType));
-    await widget._pageController.animateToPage(_selectedIndex,
-        duration: const Duration(seconds: 1),
-        curve: Curves.fastLinearToSlowEaseIn);
+    _dispatchFetch();
+    widget._pageController.animateToPage(
+      1,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
-  bool newsTypeSelected(NewsType newsType) {
-    return newsType == _newsType;
+  void _onHnTypeChanged(NewsType type) {
+    setState(() => _hnNewsType = type);
+    _dispatchFetch();
   }
 
-  Widget _buildFABText() {
-    switch (_newsType) {
-      case NewsType.top:
-        return const Text("Top");
-      case NewsType.show:
-        return const Text("Show");
-      case NewsType.ask:
-        return const Text("Ask");
-      case NewsType.job:
-        return const Text("Job");
-      case NewsType.newStories:
-        return const Text("New");
-      case NewsType.best:
-        return const Text("Best");
-    }
+  void _onRssFeedFilterChanged(RssFeedInfo? feed) {
+    setState(() => _rssFeedFilter = feed);
+    _dispatchFetch();
   }
 
-  Widget _createBody() {
-    return PageView(
-      controller: widget._pageController,
-      onPageChanged: (index) => setState(() => _selectedIndex = index),
-      children: [Menu(key: UniqueKey()), widget.body],
+  void _dispatchFetch() {
+    context.read<NewsBloc>().add(FetchNews(
+          _feedMode == FeedMode.hn ? _hnNewsType : NewsType.top,
+          feedMode: _feedMode,
+          rssFeedFilter: _rssFeedFilter,
+        ));
+  }
+
+  Widget _buildHnTypeChips(fluent.FluentThemeData theme) {
+    const types = [
+      (NewsType.top, 'Top'),
+      (NewsType.newStories, 'New'),
+      (NewsType.best, 'Best'),
+      (NewsType.ask, 'Ask'),
+      (NewsType.show, 'Show'),
+      (NewsType.job, 'Jobs'),
+    ];
+    return ColoredBox(
+      color: theme.scaffoldBackgroundColor,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: types.map((entry) {
+            final (type, label) = entry;
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: FilterChip(
+                label: Text(label),
+                selected: _hnNewsType == type,
+                onSelected: (_) => _onHnTypeChanged(type),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRssFilterChips(fluent.FluentThemeData theme) {
+    final feeds = rssFeedsStore.feeds;
+    return ColoredBox(
+      color: theme.scaffoldBackgroundColor,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: FilterChip(
+                label: const Text('All'),
+                selected: _rssFeedFilter == null,
+                onSelected: (_) => _onRssFeedFilterChanged(null),
+              ),
+            ),
+            ...feeds.map((feed) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: FilterChip(
+                    label: Text(feed.name),
+                    selected: _rssFeedFilter?.url == feed.url,
+                    onSelected: (_) => _onRssFeedFilterChanged(feed),
+                  ),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewsPage(fluent.FluentThemeData theme) {
+    return Column(
+      children: [
+        Expanded(child: widget.body),
+        if (_feedMode == FeedMode.hn) _buildHnTypeChips(theme),
+        if (_feedMode == FeedMode.rss && rssFeedsStore.feeds.isNotEmpty)
+          _buildRssFilterChips(theme),
+      ],
     );
   }
 
@@ -71,44 +137,39 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
       body: ColorfulSafeArea(
         top: false,
         color: theme.scaffoldBackgroundColor,
-        child: _createBody(),
-      ),
-      floatingActionButtonLocation: ExpandableFab.location,
-      floatingActionButton: ExpandableFab(
-        type: settings.fabPosition == ExpandableFabPos.center
-            ? ExpandableFabType.fan
-            : ExpandableFabType.up,
-        distance: settings.fabPosition == ExpandableFabPos.center ? 100 : 50,
-        fanAngle: settings.fabPosition == ExpandableFabPos.center ? 180 : 90,
-        pos: settings.fabPosition,
-        childrenAnimation: ExpandableFabAnimation.none,
-        openButtonBuilder: DefaultFloatingActionButtonBuilder(
-          child: _buildFABText(),
+        child: PageView(
+          controller: widget._pageController,
+          children: [
+            Menu(key: UniqueKey()),
+            _buildNewsPage(theme),
+          ],
         ),
-        children: [
-          FloatingActionButton.small(
-            onPressed: () => _onPressed(NewsType.top),
-            child: const Text("Top"),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: switch (_feedMode) {
+          FeedMode.all => 0,
+          FeedMode.hn => 1,
+          FeedMode.rss => 2,
+        },
+        onDestinationSelected: (index) => _onFeedModeChanged(switch (index) {
+          1 => FeedMode.hn,
+          2 => FeedMode.rss,
+          _ => FeedMode.all,
+        }),
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.newspaper_outlined),
+            selectedIcon: Icon(Icons.newspaper),
+            label: 'All',
           ),
-          FloatingActionButton.small(
-            onPressed: () => _onPressed(NewsType.show),
-            child: const Text("Show"),
+          const NavigationDestination(
+            icon: Icon(Icons.trending_up_outlined),
+            selectedIcon: Icon(Icons.trending_up),
+            label: 'Hacker News',
           ),
-          FloatingActionButton.small(
-            onPressed: () => _onPressed(NewsType.ask),
-            child: const Text("Ask"),
-          ),
-          FloatingActionButton.small(
-            onPressed: () => _onPressed(NewsType.job),
-            child: const Text("Job"),
-          ),
-          FloatingActionButton.small(
-            onPressed: () => _onPressed(NewsType.newStories),
-            child: const Text("New"),
-          ),
-          FloatingActionButton.small(
-            onPressed: () => _onPressed(NewsType.best),
-            child: const Text("Best"),
+          NavigationDestination(
+            icon: Icon(MdiIcons.rssBox),
+            label: 'RSS',
           ),
         ],
       ),

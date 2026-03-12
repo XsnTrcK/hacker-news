@@ -6,6 +6,7 @@ import 'package:hackernews/components/image_list_item.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
+import 'package:hackernews/rss/models/rss_feed.dart';
 import 'package:hackernews/news/views/view_articles.dart';
 
 class News extends StatefulWidget {
@@ -18,6 +19,8 @@ class News extends StatefulWidget {
 class _NewsState extends State<News> {
   final _scrollController = ScrollController();
   NewsType _newsType = NewsType.top;
+  FeedMode _feedMode = FeedMode.all;
+  RssFeedInfo? _rssFeedFilter;
 
   @override
   void initState() {
@@ -33,7 +36,13 @@ class _NewsState extends State<News> {
   }
 
   void _onScroll() {
-    if (_isBottom()) context.read<NewsBloc>().add(FetchNews(_newsType));
+    if (_isBottom()) {
+      context.read<NewsBloc>().add(FetchNews(
+            _newsType,
+            feedMode: _feedMode,
+            rssFeedFilter: _rssFeedFilter,
+          ));
+    }
   }
 
   @override
@@ -41,14 +50,19 @@ class _NewsState extends State<News> {
     return BlocBuilder<NewsBloc, NewsState>(
       builder: (context, state) {
         _newsType = state.newsType;
+        _feedMode = state.feedMode;
+        _rssFeedFilter = state.rssFeedFilter;
         switch (state.status) {
           case NewsStatus.sucess:
             if (state.news.isEmpty) {
               return const Center(child: Text('No posts currently available'));
             }
             return material.RefreshIndicator(
-              onRefresh: () async =>
-                  context.read<NewsBloc>().add(RefreshNews(_newsType)),
+              onRefresh: () async => context.read<NewsBloc>().add(RefreshNews(
+                    _newsType,
+                    feedMode: _feedMode,
+                    rssFeedFilter: _rssFeedFilter,
+                  )),
               child: ListView.separated(
                 itemCount: state.news.length,
                 separatorBuilder: (_, __) => const Divider(),
@@ -76,7 +90,6 @@ class _NewsState extends State<News> {
           case NewsStatus.failure:
             return const Center(child: Text('Failed to fetch posts'));
           case NewsStatus.initial:
-          default:
             return const Center(child: ProgressBar());
         }
       },
