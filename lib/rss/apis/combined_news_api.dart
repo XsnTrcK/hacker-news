@@ -11,11 +11,11 @@ class CombinedNewsApiRetriever extends NewsApi {
   List<TitledItem> _hnItemsFetched = [];
   bool _hnExhausted = false;
   FeedMode _feedMode = FeedMode.all;
-  RssFeedInfo? _rssFeedFilter;
+  RssFeedInfo _rssFeedFilter = allFeedsInfo;
 
   CombinedNewsApiRetriever(this._hnApi, this._rssApi) : super(httpClient);
 
-  void setMode(FeedMode mode, {RssFeedInfo? rssFeedFilter}) {
+  void setMode(FeedMode mode, RssFeedInfo rssFeedFilter) {
     _feedMode = mode;
     _rssFeedFilter = rssFeedFilter;
   }
@@ -32,14 +32,17 @@ class CombinedNewsApiRetriever extends NewsApi {
               .fetchAllFeeds()
               .then((items) => _cachedRssItems = List<TitledItem>.from(items)),
         ]);
+        break;
       case FeedMode.hn:
         await _hnApi.refresh(newsType);
         _cachedRssItems = [];
+        break;
       case FeedMode.rss:
-        final items = _rssFeedFilter != null
-            ? await _rssApi.fetchFeed(_rssFeedFilter!)
+        final items = _rssFeedFilter != allFeedsInfo
+            ? await _rssApi.fetchFeed(_rssFeedFilter)
             : await _rssApi.fetchAllFeeds();
         _cachedRssItems = List<TitledItem>.from(items);
+        break;
     }
     if (_cachedRssItems.isNotEmpty) {
       _cachedRssItems.sort((a, b) => b.time.compareTo(a.time));

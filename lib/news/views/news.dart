@@ -20,7 +20,7 @@ class _NewsState extends State<News> {
   final _scrollController = ScrollController();
   NewsType _newsType = NewsType.top;
   FeedMode _feedMode = FeedMode.all;
-  RssFeedInfo? _rssFeedFilter;
+  RssFeedInfo _rssFeedFilter = allFeedsInfo;
 
   @override
   void initState() {

@@ -4,9 +4,9 @@ import 'package:hackernews/rss/models/rss_feed.dart';
 abstract class NewsEvent {
   final NewsType newsType;
   final FeedMode feedMode;
-  final RssFeedInfo? rssFeedFilter;
+  final RssFeedInfo rssFeedFilter;
   const NewsEvent(this.newsType,
-      {this.feedMode = FeedMode.all, this.rssFeedFilter});
+      {this.feedMode = FeedMode.all, this.rssFeedFilter = allFeedsInfo});
 }
 
 class FetchNews extends NewsEvent {

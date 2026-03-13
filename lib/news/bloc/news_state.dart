@@ -14,7 +14,7 @@ class NewsState extends Equatable {
   final bool hasReachedMax;
   final NewsType newsType;
   final FeedMode feedMode;
-  final RssFeedInfo? rssFeedFilter;
+  final RssFeedInfo rssFeedFilter;
 
   const NewsState({
     this.status = NewsStatus.initial,
@@ -22,7 +22,7 @@ class NewsState extends Equatable {
     this.hasReachedMax = false,
     this.newsType = NewsType.top,
     this.feedMode = FeedMode.all,
-    this.rssFeedFilter,
+    this.rssFeedFilter = allFeedsInfo,
   });
 
   NewsState copyWith({

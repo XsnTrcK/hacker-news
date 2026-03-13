@@ -23,12 +23,12 @@ class HackerNewserNavigation extends StatefulWidget {
 class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
   FeedMode _feedMode = FeedMode.all;
   NewsType _hnNewsType = NewsType.top;
-  RssFeedInfo? _rssFeedFilter;
+  RssFeedInfo _rssFeedFilter = allFeedsInfo;
 
   void _onFeedModeChanged(FeedMode mode) {
     setState(() {
       _feedMode = mode;
-      if (mode != FeedMode.rss) _rssFeedFilter = null;
+      if (mode != FeedMode.rss) _rssFeedFilter = allFeedsInfo;
     });
     _dispatchFetch();
     widget._pageController.animateToPage(
@@ -43,7 +43,7 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
     _dispatchFetch();
   }
 
-  void _onRssFeedFilterChanged(RssFeedInfo? feed) {
+  void _onRssFeedFilterChanged(RssFeedInfo feed) {
     setState(() => _rssFeedFilter = feed);
     _dispatchFetch();
   }
@@ -100,15 +100,15 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
               padding: const EdgeInsets.only(right: 6),
               child: FilterChip(
                 label: const Text('All'),
-                selected: _rssFeedFilter == null,
-                onSelected: (_) => _onRssFeedFilterChanged(null),
+                selected: _rssFeedFilter == allFeedsInfo,
+                onSelected: (_) => _onRssFeedFilterChanged(allFeedsInfo),
               ),
             ),
             ...feeds.map((feed) => Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: FilterChip(
                     label: Text(feed.name),
-                    selected: _rssFeedFilter?.url == feed.url,
+                    selected: _rssFeedFilter.url == feed.url,
                     onSelected: (_) => _onRssFeedFilterChanged(feed),
                   ),
                 )),

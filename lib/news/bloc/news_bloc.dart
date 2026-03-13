@@ -18,7 +18,7 @@ class NewsBloc extends ThrottledBloc<NewsEvent, NewsState> {
   void _applyMode(NewsEvent event) {
     if (_newsApi is CombinedNewsApiRetriever) {
       (_newsApi as CombinedNewsApiRetriever)
-          .setMode(event.feedMode, rssFeedFilter: event.rssFeedFilter);
+          .setMode(event.feedMode, event.rssFeedFilter);
     }
   }
 
