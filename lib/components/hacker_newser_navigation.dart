@@ -129,9 +129,49 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
     );
   }
 
+  Widget _buildBottomNavigationBar() {
+    return NavigationBar(
+      selectedIndex: switch (_feedMode) {
+        FeedMode.all => 0,
+        FeedMode.hn => 1,
+        FeedMode.rss => 2,
+      },
+      onDestinationSelected: (index) => _onFeedModeChanged(switch (index) {
+        1 => FeedMode.hn,
+        2 => FeedMode.rss,
+        _ => FeedMode.all,
+      }),
+      destinations: [
+        const NavigationDestination(
+          icon: Icon(Icons.newspaper_outlined),
+          selectedIcon: Icon(Icons.newspaper),
+          label: 'All',
+        ),
+        const NavigationDestination(
+          icon: Icon(Icons.trending_up_outlined),
+          selectedIcon: Icon(Icons.trending_up),
+          label: 'Hacker News',
+        ),
+        NavigationDestination(
+          icon: Icon(MdiIcons.rssBox),
+          label: 'RSS',
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = fluent.FluentTheme.of(context);
+    Widget? bottomNavigationBar;
+    if (rssFeedsStore.feeds.isEmpty) {
+      setState(() {
+        _feedMode = FeedMode.hn;
+      });
+      _dispatchFetch();
+    } else {
+      bottomNavigationBar = _buildBottomNavigationBar();
+    }
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: ColorfulSafeArea(
@@ -145,34 +185,7 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: switch (_feedMode) {
-          FeedMode.all => 0,
-          FeedMode.hn => 1,
-          FeedMode.rss => 2,
-        },
-        onDestinationSelected: (index) => _onFeedModeChanged(switch (index) {
-          1 => FeedMode.hn,
-          2 => FeedMode.rss,
-          _ => FeedMode.all,
-        }),
-        destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.newspaper_outlined),
-            selectedIcon: Icon(Icons.newspaper),
-            label: 'All',
-          ),
-          const NavigationDestination(
-            icon: Icon(Icons.trending_up_outlined),
-            selectedIcon: Icon(Icons.trending_up),
-            label: 'Hacker News',
-          ),
-          NavigationDestination(
-            icon: Icon(MdiIcons.rssBox),
-            label: 'RSS',
-          ),
-        ],
-      ),
+      bottomNavigationBar: bottomNavigationBar,
     );
   }
 }
