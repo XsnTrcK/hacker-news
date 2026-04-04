@@ -69,10 +69,18 @@ class CombinedNewsApiRetriever extends NewsApi {
             _hnItemsFetched.addAll(hnItems);
           }
         }
-        final pool = <TitledItem>[..._cachedRssItems, ..._hnItemsFetched];
-        pool.sort((a, b) => b.time.compareTo(a.time));
-        if (offset >= pool.length) return [];
-        return pool.sublist(offset, (offset + count).clamp(0, pool.length));
+        final interleaved = <TitledItem>[];
+        final maxLen =
+            _hnItemsFetched.length > _cachedRssItems.length
+                ? _hnItemsFetched.length
+                : _cachedRssItems.length;
+        for (int i = 0; i < maxLen; i++) {
+          if (i < _hnItemsFetched.length) interleaved.add(_hnItemsFetched[i]);
+          if (i < _cachedRssItems.length) interleaved.add(_cachedRssItems[i]);
+        }
+        if (offset >= interleaved.length) return [];
+        return interleaved.sublist(
+            offset, (offset + count).clamp(0, interleaved.length));
     }
   }
 }
