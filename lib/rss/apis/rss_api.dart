@@ -20,6 +20,8 @@ class RssApiRetriever {
     return results.expand((items) => items).toList();
   }
 
+  Future<List<RssStoryItem>> fetchFeed(RssFeedInfo feed) => _fetchFeed(feed);
+
   Future<List<RssStoryItem>> _fetchFeed(RssFeedInfo feed) async {
     try {
       final response = await _httpClient.get(Uri.parse(feed.url));

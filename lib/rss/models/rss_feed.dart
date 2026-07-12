@@ -9,3 +9,5 @@ class RssFeedInfo {
   factory RssFeedInfo.fromMap(Map<String, dynamic> map) =>
       RssFeedInfo(name: map['name'] as String, url: map['url'] as String);
 }
+
+const allFeedsInfo = RssFeedInfo(name: 'All Feeds', url: '');
