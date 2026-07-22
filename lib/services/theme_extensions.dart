@@ -26,14 +26,59 @@ extension FluentTheming on FluentThemeData {
   Color get textColor =>
       brightness == Brightness.dark ? Colors.white : Colors.black;
 
-  static const String _darkReaderViewStyle =
-      "<style>div {color:#FFFFFF;font-size:40px;} p {color:#FFFFFF;font-size:40px;} a {color:#CCFFFE;} h1 {color:#FFFFFF;font-size:120px;} h2 {color:#FFFFFF;font-size:80px;} h3 {color:#FFFFFF;font-size:60px;} li {color:#FFFFFF;font-size:40px;} ul {color:#FFFFFF;font-size:40px;} img {max-width:98%;height:auto;} pre {white-space:pre-wrap;max-width:98%;height:auto;}</style>";
-  static const String _lightReaderViewStyle =
-      "<style>div {color:#000000;font-size:40px;} p {color:#000000;font-size:40px;} h1 {color:#000000;font-size:120px;} h2 {color:#000000;font-size:80px;} h3 {color:#000000;font-size:60px;} li {color:#000000;font-size:40px;} ul {color:#000000;font-size:40px;} img {max-width:98%;height:auto;} pre {white-space:pre-wrap;max-width:98%;height:auto;}</style>";
+  String get readerViewStyle {
+    final dark = brightness == Brightness.dark;
+    final color = dark ? '#FFFFFF' : '#000000';
+    final bg = dark ? '#000000' : '#FFFFFF';
+    final linkColor = dark ? '#CCFFFE' : '#0066CC';
+    final body = _readerBodySize;
+    final h1 = _readerH1Size;
+    final h2 = _readerH2Size;
+    final h3 = _readerH3Size;
+    return "<style>"
+        "body{color:$color;background-color:$bg;font-size:${body}px;line-height:1.6;padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}"
+        "h1{font-size:${h1}px;line-height:1.2;font-weight:700;margin-bottom:12px;}"
+        "h2{font-size:${h2}px;line-height:1.3;font-weight:600;}"
+        "h3{font-size:${h3}px;line-height:1.3;font-weight:600;}"
+        "p{margin-bottom:12px;}"
+        "a{color:$linkColor;}"
+        "img{max-width:100%;height:auto;display:block;margin:12px 0;}"
+        "pre{white-space:pre-wrap;max-width:100%;overflow-x:auto;font-size:${body - 2}px;}"
+        "li{margin-bottom:4px;}"
+        "</style>";
+  }
 
-  String get readerViewStyle => brightness == Brightness.dark
-      ? _darkReaderViewStyle
-      : _lightReaderViewStyle;
+  int get _readerBodySize {
+    switch (settings.fontSize) {
+      case SettingsFontSize.small: return 15;
+      case SettingsFontSize.medium: return 17;
+      case SettingsFontSize.large: return 19;
+    }
+  }
+
+  int get _readerH1Size {
+    switch (settings.fontSize) {
+      case SettingsFontSize.small: return 24;
+      case SettingsFontSize.medium: return 28;
+      case SettingsFontSize.large: return 32;
+    }
+  }
+
+  int get _readerH2Size {
+    switch (settings.fontSize) {
+      case SettingsFontSize.small: return 19;
+      case SettingsFontSize.medium: return 22;
+      case SettingsFontSize.large: return 25;
+    }
+  }
+
+  int get _readerH3Size {
+    switch (settings.fontSize) {
+      case SettingsFontSize.small: return 17;
+      case SettingsFontSize.medium: return 19;
+      case SettingsFontSize.large: return 21;
+    }
+  }
 
   Typography get dynamicTypography {
     return typography.merge(

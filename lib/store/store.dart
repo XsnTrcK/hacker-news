@@ -88,7 +88,7 @@ class NewsStore extends Store<Item> with ItemUpdater<Item> {
 
   @override
   Item displayReaderMode(Item item) {
-    item.state.displayReaderMode = !item.state.displayReaderMode;
+    item.state.displayReaderMode = !(item.state.displayReaderMode ?? false);
     save(item);
     return item;
   }

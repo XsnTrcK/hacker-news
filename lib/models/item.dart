@@ -21,7 +21,7 @@ extension ItemMap on Map<String, dynamic> {
   bool get isExpanded => this["isExpanded"] ?? false;
   bool get savedForReadLater => this["savedForReadLater"] ?? false;
   bool get hasBeenRead => this["hasBeenRead"] ?? false;
-  bool get displayReaderMode => this["displayReaderMode"] ?? true;
+  bool? get displayReaderMode => this["displayReaderMode"] as bool?;
   String get feedName => this["feedName"] ?? '';
   int? get hnItemId => this["hnItemId"];
 }
@@ -30,13 +30,13 @@ class ItemState {
   bool isExpanded;
   bool savedForReadLater;
   bool hasBeenRead;
-  bool displayReaderMode;
+  bool? displayReaderMode;
 
   ItemState({
     this.isExpanded = true,
     this.savedForReadLater = false,
     this.hasBeenRead = false,
-    this.displayReaderMode = false,
+    this.displayReaderMode,
   });
 
   factory ItemState.fromJson(Map<String, dynamic>? stateMap) {

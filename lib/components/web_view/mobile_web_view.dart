@@ -1,187 +1,216 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
-import 'dart:async';
+import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:hackernews/components/web_view/web_view_carrier.dart';
 import 'package:hackernews/services/theme_extensions.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:flutter/material.dart' as material;
 
 class MobileWebView extends StatefulWidget {
-  final String _url;
-  final bool _displayReaderMode;
+  final String url;
+  final bool displayReaderMode;
   final bool eager;
+  final WebViewCarrier? carrier;
+  final void Function(bool isReaderable)? onReadabilityDetermined;
 
-  const MobileWebView(this._url, this._displayReaderMode,
-      {super.key, this.eager = true});
+  const MobileWebView(
+    this.url,
+    this.displayReaderMode, {
+    super.key,
+    this.eager = true,
+    this.carrier,
+    this.onReadabilityDetermined,
+  });
 
   @override
   State<MobileWebView> createState() => _MobileWebViewState();
 }
 
 class _MobileWebViewState extends State<MobileWebView> {
-  final RegExp _localStyleRegExp = RegExp('style="[a-zA-Z0-9#:%;\\s-]+"');
-  final RegExp _navTagsRegExp = RegExp(r'<nav[a-zA-Z"=\s-]*>.*<\/nav>');
-  String _downloadedHtml = '';
+  late final WebViewCarrier _carrier;
+  bool _ownsCarrier = false;
   bool canGoBack = false;
+  bool _isLoading = true;
+  bool _awaitingReaderHtml = false;
+  bool _showingReader = false;
   late String _readerViewStyle;
-  late WebViewController _controller;
+  bool _initialRenderChecked = false;
 
-  String get url {
-    if (widget._url.startsWith('http:')) {
-      return widget._url.replaceFirst("http:", "https:");
-    }
-    return widget._url;
-  }
+  String get _resolvedUrl => _carrier.resolvedUrl;
 
   @override
   void initState() {
-    _controller = WebViewController()
-      ..setBackgroundColor(Colors.white)
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(NavigationDelegate(
-        onPageFinished: (_) async {
-          if (_downloadedHtml != '') return;
-          await _getSimplifiedHtml((html) async {
-            if (!widget._displayReaderMode) return;
-            await _controller.loadHtmlString(
-                "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}",
-                baseUrl: url);
-          });
-        },
-        onUrlChange: (urlChange) {
-          setState(() {
-            canGoBack = urlChange.url != null && urlChange.url != url;
-          });
-        },
-      ))
-      ..loadRequest(Uri.parse(url));
     super.initState();
+    _ownsCarrier = widget.carrier == null;
+    _carrier = widget.carrier ?? WebViewCarrier(url: widget.url);
+    _carrier.onHtmlReady = _onCarrierHtmlReady;
+    _carrier.onReadabilityDetermined = _onCarrierReadabilityDetermined;
+    _carrier.onUrlChanged = _onCarrierUrlChanged;
+    _carrier.onLoadComplete = _onCarrierLoadComplete;
+    _carrier.onExternalNavigation = _onExternalNavigation;
+    _isLoading = !_carrier.isReady;
+    canGoBack = false;
   }
 
-  // TODO: Move to separate class?
-  Future<String?> _runJs(String command) async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _readerViewStyle = FluentTheme.of(context).readerViewStyle;
+    if (!_initialRenderChecked) {
+      _initialRenderChecked = true;
+      if (_carrier.isReady) {
+        final isReaderable = _carrier.cachedIsReaderable!;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            widget.onReadabilityDetermined?.call(isReaderable);
+          }
+        });
+      }
+      _reconcileDisplayState();
+    }
+  }
+
+  void _onCarrierHtmlReady() {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _awaitingReaderHtml = false;
+    });
+  }
+
+  void _onCarrierLoadComplete() {
+    if (!mounted) return;
+    if (_awaitingReaderHtml) return;
+    setState(() => _isLoading = false);
+    _reconcileDisplayState();
+  }
+
+  void _onCarrierReadabilityDetermined(bool isReaderable) {
+    widget.onReadabilityDetermined?.call(isReaderable);
+  }
+
+  void _onCarrierUrlChanged(UrlChange change) {
+    if (!mounted) return;
+    setState(() {
+      canGoBack = change.url != null && change.url != _resolvedUrl;
+    });
+  }
+
+  Future<void> _onExternalNavigation(Uri uri) async {
+    if (!mounted) return;
+    final canLaunch = await canLaunchUrl(uri);
+    if (!canLaunch && Platform.isAndroid) return;
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => ContentDialog(
+        title: const Text('Open in external app?'),
+        content: const Text('This link wants to open in an external app.'),
+        actions: [
+          Button(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          FilledButton(
+            child: const Text('Open'),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     try {
-      return await _controller.runJavaScriptReturningResult(command) as String?;
+      final launched =
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        material.ScaffoldMessenger.of(context).showSnackBar(
+          const material.SnackBar(content: Text('Could not open the link.')),
+        );
+      }
     } catch (_) {
-      return null;
+      if (mounted) {
+        material.ScaffoldMessenger.of(context).showSnackBar(
+          const material.SnackBar(content: Text('Could not open the link.')),
+        );
+      }
     }
   }
 
-  // TODO: Move to separate class?
-  Future _getSimplifiedHtml(
-      Future Function(String html) updateController) async {
-    // Check for class news-article--content--body
-    var tempHtml = await _runJs(
-        "window.document.getElementsByClassName('news-article--content--body')[0].innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
+  void _reconcileDisplayState() {
+    if (!_carrier.isReady) return;
+    if (widget.displayReaderMode && _carrier.hasReaderHtml) {
+      if (_awaitingReaderHtml) return;
+      setState(() {
+        _awaitingReaderHtml = true;
+        _isLoading = true;
+      });
+      _showingReader = true;
+      _carrier.loadReaderHtml(_readerViewStyle);
+      return;
     }
-
-    // Check for class body-content
-    tempHtml = await _runJs(
-        "window.document.getElementsByClassName('body-content')[0].innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
+    if (!widget.displayReaderMode && _showingReader) {
+      setState(() {
+        _awaitingReaderHtml = false;
+        _showingReader = false;
+      });
+      _carrier.loadOriginal();
     }
-
-    // Check for class article
-    tempHtml = await _runJs(
-        "window.document.getElementsByClassName('article')[0].innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
-    }
-
-    // Check for tag article
-    tempHtml = await _runJs(
-        "window.document.getElementsByTagName('article')[0].innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
-    }
-
-    // Check for class content
-    tempHtml = await _runJs(
-        "window.document.getElementsByClassName('content')[0].innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
-    }
-
-    // Check for id content
-    tempHtml =
-        await _runJs("window.document.getElementById('content').innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
-    }
-
-    // Check for tag main
-    tempHtml = await _runJs(
-        "window.document.getElementsByTagName('main')[0].innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
-    }
-
-    // Check for id theContent for web archive
-    tempHtml =
-        await _runJs("window.document.getElementById('theContent').innerHTML;");
-    if (tempHtml?.isNotEmpty ?? false) {
-      _downloadedHtml = tempHtml!;
-      return await updateController(_downloadedHtml);
-    }
-  }
-
-  // TODO: Move to separate class?
-  String _removeUnwantedHtml(String html) {
-    var updatedHtml = html.replaceAllMapped(_localStyleRegExp, (match) => "");
-    updatedHtml = updatedHtml.replaceAllMapped(_navTagsRegExp, (match) => "");
-    return updatedHtml;
   }
 
   @override
   void didUpdateWidget(covariant MobileWebView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget._displayReaderMode == widget._displayReaderMode ||
-        _downloadedHtml.isEmpty) {
-      return;
+    if (oldWidget.displayReaderMode != widget.displayReaderMode) {
+      _reconcileDisplayState();
     }
-    if (widget._displayReaderMode) {
-      final htmlString =
-          "$_readerViewStyle${_removeUnwantedHtml(_downloadedHtml)}";
-      _controller.loadHtmlString(htmlString, baseUrl: url);
+  }
+
+  @override
+  void dispose() {
+    if (_ownsCarrier) {
+      _carrier.dispose();
     } else {
-      _controller.loadRequest(Uri.parse(url));
+      _carrier.detach();
     }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = FluentTheme.of(context);
-    _readerViewStyle = theme.readerViewStyle;
-    _controller.setBackgroundColor(widget._displayReaderMode
-        ? theme.scaffoldBackgroundColor
-        : Colors.white);
+    _carrier.controller.setBackgroundColor(
+      widget.displayReaderMode ? theme.scaffoldBackgroundColor : Colors.white,
+    );
 
     return material.Scaffold(
-      body: WebViewWidget(
-        controller: _controller,
-        gestureRecognizers: widget.eager
-            ? {Factory(() => EagerGestureRecognizer())}
-            : {Factory(() => PanGestureRecognizer())},
+      body: Stack(
+        children: [
+          WebViewWidget(
+            controller: _carrier.controller,
+            gestureRecognizers: widget.eager
+                ? {Factory(() => EagerGestureRecognizer())}
+                : {Factory(() => PanGestureRecognizer())},
+          ),
+          if (_isLoading)
+            Positioned.fill(
+              child: Container(
+                color: theme.scaffoldBackgroundColor,
+                child: const Center(child: ProgressBar()),
+              ),
+            ),
+        ],
       ),
       floatingActionButton: canGoBack
           ? material.FloatingActionButton.small(
               onPressed: () {
-                _controller.goBack();
+                _carrier.controller.goBack();
               },
-              shape: CircleBorder(),
+              shape: const CircleBorder(),
               child: const Icon(FluentIcons.back),
             )
           : null,
