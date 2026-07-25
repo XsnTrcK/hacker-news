@@ -1,5 +1,7 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'dart:io';
+
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/scheduler.dart';
@@ -39,6 +41,11 @@ class _DisplayArticle extends State<DisplayArticle> {
   ItemWithKids? _hnMatch;
   bool _isReaderable = false;
 
+  // Windows' WebView implementation doesn't run Readability analysis, so
+  // onReadabilityDetermined never fires there — hide the toggle explicitly
+  // rather than leaving its absence as an implicit side effect.
+  bool get _supportsReaderMode => !Platform.isWindows;
+
   ItemWithKids? _commentItem(TitledItem item) {
     if (item is RssStoryItem) {
       return _hnMatch;
@@ -69,7 +76,7 @@ class _DisplayArticle extends State<DisplayArticle> {
     return Row(
       children: [
         Expanded(
-            child: _isReaderable
+            child: (_isReaderable && _supportsReaderMode)
                 ? IconButton(
                     icon: Icon((item.state.displayReaderMode ?? false)
                         ? FluentIcons.reading_mode_solid

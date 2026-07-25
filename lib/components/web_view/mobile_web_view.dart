@@ -1,5 +1,6 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
@@ -32,7 +33,7 @@ class MobileWebView extends StatefulWidget {
 }
 
 class _MobileWebViewState extends State<MobileWebView> {
-  late final WebViewCarrier _carrier;
+  late WebViewCarrier _carrier;
   bool _ownsCarrier = false;
   bool canGoBack = false;
   bool _isLoading = true;
@@ -40,19 +41,45 @@ class _MobileWebViewState extends State<MobileWebView> {
   bool _showingReader = false;
   late String _readerViewStyle;
   bool _initialRenderChecked = false;
+  Timer? _readerHtmlTimeoutTimer;
+  BuildContext? _dialogContext;
 
   String get _resolvedUrl => _carrier.resolvedUrl;
 
-  @override
-  void initState() {
-    super.initState();
+  void _attachCarrier(WebViewCarrier carrier) {
     _ownsCarrier = widget.carrier == null;
-    _carrier = widget.carrier ?? WebViewCarrier(url: widget.url);
+    _carrier = carrier;
     _carrier.onHtmlReady = _onCarrierHtmlReady;
     _carrier.onReadabilityDetermined = _onCarrierReadabilityDetermined;
     _carrier.onUrlChanged = _onCarrierUrlChanged;
     _carrier.onLoadComplete = _onCarrierLoadComplete;
     _carrier.onExternalNavigation = _onExternalNavigation;
+  }
+
+  void _releaseCurrentCarrier() {
+    if (_ownsCarrier) {
+      _carrier.dispose();
+    } else {
+      _carrier.detach();
+    }
+  }
+
+  void _checkInitialCarrierState() {
+    if (_carrier.isReady) {
+      final isReaderable = _carrier.cachedIsReaderable!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          widget.onReadabilityDetermined?.call(isReaderable);
+        }
+      });
+    }
+    _reconcileDisplayState();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _attachCarrier(widget.carrier ?? WebViewCarrier(url: widget.url));
     _isLoading = !_carrier.isReady;
     canGoBack = false;
   }
@@ -63,19 +90,12 @@ class _MobileWebViewState extends State<MobileWebView> {
     _readerViewStyle = FluentTheme.of(context).readerViewStyle;
     if (!_initialRenderChecked) {
       _initialRenderChecked = true;
-      if (_carrier.isReady) {
-        final isReaderable = _carrier.cachedIsReaderable!;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            widget.onReadabilityDetermined?.call(isReaderable);
-          }
-        });
-      }
-      _reconcileDisplayState();
+      _checkInitialCarrierState();
     }
   }
 
   void _onCarrierHtmlReady() {
+    _readerHtmlTimeoutTimer?.cancel();
     if (!mounted) return;
     setState(() {
       _isLoading = false;
@@ -108,21 +128,25 @@ class _MobileWebViewState extends State<MobileWebView> {
     if (!mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => ContentDialog(
-        title: const Text('Open in external app?'),
-        content: const Text('This link wants to open in an external app.'),
-        actions: [
-          Button(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.pop(context, false),
-          ),
-          FilledButton(
-            child: const Text('Open'),
-            onPressed: () => Navigator.pop(context, true),
-          ),
-        ],
-      ),
+      builder: (dialogContext) {
+        _dialogContext = dialogContext;
+        return ContentDialog(
+          title: const Text('Open in external app?'),
+          content: const Text('This link wants to open in an external app.'),
+          actions: [
+            Button(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.pop(dialogContext, false),
+            ),
+            FilledButton(
+              child: const Text('Open'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+            ),
+          ],
+        );
+      },
     );
+    _dialogContext = null;
     if (confirmed != true) return;
     try {
       final launched =
@@ -150,6 +174,14 @@ class _MobileWebViewState extends State<MobileWebView> {
         _isLoading = true;
       });
       _showingReader = true;
+      _readerHtmlTimeoutTimer?.cancel();
+      _readerHtmlTimeoutTimer = Timer(const Duration(seconds: 5), () {
+        if (!mounted || !_awaitingReaderHtml) return;
+        setState(() {
+          _isLoading = false;
+          _awaitingReaderHtml = false;
+        });
+      });
       _carrier.loadReaderHtml(_readerViewStyle);
       return;
     }
@@ -165,6 +197,20 @@ class _MobileWebViewState extends State<MobileWebView> {
   @override
   void didUpdateWidget(covariant MobileWebView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.carrier, widget.carrier)) {
+      _readerHtmlTimeoutTimer?.cancel();
+      _releaseCurrentCarrier();
+      _attachCarrier(widget.carrier ?? WebViewCarrier(url: widget.url));
+      _initialRenderChecked = true;
+      setState(() {
+        _isLoading = !_carrier.isReady;
+        _awaitingReaderHtml = false;
+        _showingReader = false;
+        canGoBack = false;
+      });
+      _checkInitialCarrierState();
+      return;
+    }
     if (oldWidget.displayReaderMode != widget.displayReaderMode) {
       _reconcileDisplayState();
     }
@@ -172,11 +218,14 @@ class _MobileWebViewState extends State<MobileWebView> {
 
   @override
   void dispose() {
-    if (_ownsCarrier) {
-      _carrier.dispose();
-    } else {
-      _carrier.detach();
+    _readerHtmlTimeoutTimer?.cancel();
+    final dialogContext = _dialogContext;
+    if (dialogContext != null) {
+      try {
+        Navigator.of(dialogContext).pop();
+      } catch (_) {}
     }
+    _releaseCurrentCarrier();
     super.dispose();
   }
 

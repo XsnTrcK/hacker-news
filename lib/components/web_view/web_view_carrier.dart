@@ -20,6 +20,7 @@ class WebViewCarrier {
   String? cachedReaderHtml;
   bool? cachedIsReaderable;
   bool _analysisInProgress = false;
+  bool _loadCompleteFired = false;
   bool _isDisposed = false;
   void Function(bool isReaderable)? onReadabilityDetermined;
   void Function(UrlChange change)? onUrlChanged;
@@ -62,6 +63,14 @@ class WebViewCarrier {
       ..setNavigationDelegate(NavigationDelegate(
         onNavigationRequest: (request) {
           final uri = Uri.tryParse(request.url);
+          // WKWebView issues internal navigations to `about:blank` (view
+          // initialization, before the real `loadRequest` target loads) and
+          // `about:srcdoc` (sandboxed iframes with a `srcdoc` attribute).
+          // Neither is a real external link — let them through as normal
+          // navigation instead of prompting the external-app dialog.
+          if (uri != null && uri.scheme == 'about') {
+            return NavigationDecision.navigate;
+          }
           if (uri != null && uri.scheme != 'http' && uri.scheme != 'https') {
             onExternalNavigation?.call(uri);
             return NavigationDecision.prevent;
@@ -100,62 +109,78 @@ class WebViewCarrier {
     }
   }
 
+  void _fireLoadComplete() {
+    if (_loadCompleteFired) return;
+    _loadCompleteFired = true;
+    onLoadComplete?.call();
+  }
+
   Future<void> _onPageFinished() async {
     if (cachedReaderHtml != null || cachedIsReaderable == false) return;
     if (_analysisInProgress) return;
     _analysisInProgress = true;
+    _loadCompleteFired = false;
 
-    // Clear the spinner early when reader mode is off — readability analysis continues
-    // in the background so the toggle button can still appear if the article is readable.
-    if (displayReaderMode == false) {
-      onLoadComplete?.call();
-    }
-
-    await _bundleReady;
-
-    if (_isDisposed) return;
-    // Re-check after await — a redirect may have already populated these before the bundle loaded.
-    if (cachedReaderHtml != null || cachedIsReaderable == false) return;
-
-    await _runJs(_readabilityBundle);
-
-    if (_isDisposed) return;
-
-    if (displayReaderMode == null) {
-      final isReaderable = await _runJs('isProbablyReaderable(document)');
-      if (_isDisposed) return;
-      if (isReaderable != 'true') {
-        cachedIsReaderable = false;
-        onReadabilityDetermined?.call(false);
-        onLoadComplete?.call();
-        return;
+    try {
+      // Clear the spinner early when reader mode is off — readability analysis continues
+      // in the background so the toggle button can still appear if the article is readable.
+      if (displayReaderMode == false) {
+        _fireLoadComplete();
       }
-    }
 
-    final jsonStr = await _runJs(
-        'JSON.stringify(new Readability(document.cloneNode(true)).parse())');
-    if (_isDisposed) return;
-    String? html;
-    if (jsonStr != null && jsonStr != 'null') {
-      try {
-        var decoded = jsonDecode(jsonStr);
-        if (decoded is String) decoded = jsonDecode(decoded);
-        final parsed = decoded as Map<String, dynamic>?;
-        final content = parsed?['content'] as String?;
-        if (content?.isNotEmpty ?? false) {
-          final title = parsed?['title'] as String? ?? '';
-          final byline = parsed?['byline'] as String? ?? '';
-          final header =
-              '<h1>$title</h1>${byline.isNotEmpty ? '<p>$byline</p>' : ''}';
-          html = '$header$content';
+      await _bundleReady;
+
+      if (_isDisposed) return;
+      // Re-check after await — a redirect may have already populated these before the bundle loaded.
+      if (cachedReaderHtml != null || cachedIsReaderable == false) return;
+
+      await _runJs(_readabilityBundle);
+
+      if (_isDisposed) return;
+
+      if (displayReaderMode == null) {
+        final isReaderable = await _runJs('isProbablyReaderable(document)');
+        if (_isDisposed) return;
+        if (isReaderable != 'true') {
+          cachedIsReaderable = false;
+          onReadabilityDetermined?.call(false);
+          _fireLoadComplete();
+          return;
         }
-      } catch (_) {}
-    }
+      }
 
-    if (html != null) cachedReaderHtml = html;
-    cachedIsReaderable = html != null;
-    onReadabilityDetermined?.call(html != null);
-    onLoadComplete?.call();
+      final jsonStr = await _runJs(
+          'JSON.stringify(new Readability(document.cloneNode(true)).parse())');
+      if (_isDisposed) return;
+      // Re-check after await — onWebResourceError may have already resolved
+      // this page's readability state while the parse was still in flight.
+      if (cachedReaderHtml != null || cachedIsReaderable == false) return;
+      String? html;
+      if (jsonStr != null && jsonStr != 'null') {
+        try {
+          var decoded = jsonDecode(jsonStr);
+          if (decoded is String) decoded = jsonDecode(decoded);
+          final parsed = decoded as Map<String, dynamic>?;
+          final content = parsed?['content'] as String?;
+          if (content?.isNotEmpty ?? false) {
+            final title = parsed?['title'] as String? ?? '';
+            final byline = parsed?['byline'] as String? ?? '';
+            final header =
+                '<h1>$title</h1>${byline.isNotEmpty ? '<p>$byline</p>' : ''}';
+            html = '$header$content';
+          }
+        } catch (_) {}
+      }
+
+      if (html != null) cachedReaderHtml = html;
+      cachedIsReaderable = html != null;
+      onReadabilityDetermined?.call(html != null);
+      _fireLoadComplete();
+    } finally {
+      // Reset so a later, non-concurrent invocation (e.g. after loadOriginal()
+      // resets the cached fields for a retry) isn't blocked by this guard forever.
+      _analysisInProgress = false;
+    }
   }
 
   Future<void> loadReaderHtml(String readerViewStyle) async {
@@ -175,6 +200,8 @@ class WebViewCarrier {
   }
 
   Future<void> loadOriginal() async {
+    cachedIsReaderable = null;
+    cachedReaderHtml = null;
     await controller.loadRequest(Uri.parse(resolvedUrl));
   }
 

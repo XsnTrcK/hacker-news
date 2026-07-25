@@ -23,8 +23,9 @@ class _ViewArticlesState extends State<ViewArticles> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = (widget.initialIndex ?? 0)
-        .clamp(0, widget._articles.length - 1);
+    _currentIndex = widget._articles.isEmpty
+        ? 0
+        : (widget.initialIndex ?? 0).clamp(0, widget._articles.length - 1);
     _pageController = PageController(initialPage: _currentIndex);
     _ensureCarriersFor(_currentIndex);
   }

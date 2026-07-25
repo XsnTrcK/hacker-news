@@ -48,37 +48,25 @@ extension FluentTheming on FluentThemeData {
         "</style>";
   }
 
-  int get _readerBodySize {
+  /// Returns the value matching the current `settings.fontSize`.
+  T _byFontSize<T>(T small, T medium, T large) {
     switch (settings.fontSize) {
-      case SettingsFontSize.small: return 15;
-      case SettingsFontSize.medium: return 17;
-      case SettingsFontSize.large: return 19;
+      case SettingsFontSize.small:
+        return small;
+      case SettingsFontSize.medium:
+        return medium;
+      case SettingsFontSize.large:
+        return large;
     }
   }
 
-  int get _readerH1Size {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small: return 24;
-      case SettingsFontSize.medium: return 28;
-      case SettingsFontSize.large: return 32;
-    }
-  }
+  int get _readerBodySize => _byFontSize(15, 17, 19);
 
-  int get _readerH2Size {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small: return 19;
-      case SettingsFontSize.medium: return 22;
-      case SettingsFontSize.large: return 25;
-    }
-  }
+  int get _readerH1Size => _byFontSize(24, 28, 32);
 
-  int get _readerH3Size {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small: return 17;
-      case SettingsFontSize.medium: return 19;
-      case SettingsFontSize.large: return 21;
-    }
-  }
+  int get _readerH2Size => _byFontSize(19, 22, 25);
+
+  int get _readerH3Size => _byFontSize(17, 19, 21);
 
   Typography get dynamicTypography {
     return typography.merge(
@@ -127,80 +115,17 @@ extension FluentTheming on FluentThemeData {
     );
   }
 
-  double get _captionFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 11;
-      case SettingsFontSize.medium:
-        return 13;
-      case SettingsFontSize.large:
-        return 15;
-    }
-  }
+  double get _captionFontSize => _byFontSize(11, 13, 15);
 
-  double get _bodyFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 13;
-      case SettingsFontSize.medium:
-        return 15;
-      case SettingsFontSize.large:
-        return 17;
-    }
-  }
+  double get _bodyFontSize => _byFontSize(13, 15, 17);
 
-  double get _bodyLargeFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 17;
-      case SettingsFontSize.medium:
-        return 19;
-      case SettingsFontSize.large:
-        return 21;
-    }
-  }
+  double get _bodyLargeFontSize => _byFontSize(17, 19, 21);
 
-  double get _subTitleFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 19;
-      case SettingsFontSize.medium:
-        return 21;
-      case SettingsFontSize.large:
-        return 23;
-    }
-  }
+  double get _subTitleFontSize => _byFontSize(19, 21, 23);
 
-  double get _titleFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 27;
-      case SettingsFontSize.medium:
-        return 29;
-      case SettingsFontSize.large:
-        return 31;
-    }
-  }
+  double get _titleFontSize => _byFontSize(27, 29, 31);
 
-  double get _titleLargeFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 39;
-      case SettingsFontSize.medium:
-        return 41;
-      case SettingsFontSize.large:
-        return 43;
-    }
-  }
+  double get _titleLargeFontSize => _byFontSize(39, 41, 43);
 
-  double get _displayFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 67;
-      case SettingsFontSize.medium:
-        return 69;
-      case SettingsFontSize.large:
-        return 71;
-    }
-  }
+  double get _displayFontSize => _byFontSize(67, 69, 71);
 }
