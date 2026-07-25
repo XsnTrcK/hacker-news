@@ -2,7 +2,7 @@
 
 Automatically activate reader mode for any article page where `isProbablyReaderable` returns true, removing the need for manual user interaction. While the WebView loads in the background, a native Flutter loading spinner is shown; once readability is determined the spinner is dismissed and either reader HTML or the normal webview is revealed. The reader mode toggle button remains fully functional so users can still override the auto-activated state.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Loading spinner shown on article open
 The system SHALL display a native loading spinner overlaid on a background matching `scaffoldBackgroundColor` from the moment an article opens until content is definitively ready (reader HTML rendered or normal webview confirmed non-readerable).
@@ -55,3 +55,14 @@ The system SHALL apply auto-reader-mode behavior uniformly to all article types.
 #### Scenario: RSS article auto-activates reader mode
 - **WHEN** the user opens an RSS story article and `isProbablyReaderable` returns true
 - **THEN** reader mode auto-activates using the same flow as HN articles
+
+### Requirement: Reader-mode toggle visibility does not depend on unsupported platforms
+The reader-mode toggle button's visibility SHALL NOT silently remain hidden on platforms whose WebView implementation does not report readability. Each platform-specific WebView implementation SHALL either invoke `onReadabilityDetermined` when it can determine readability, or the toggle visibility logic SHALL account for platforms where that determination is not supported.
+
+#### Scenario: Windows WebView readability support
+- **WHEN** the app runs on Windows, where `WindowsWebView` does not perform Readability analysis
+- **THEN** the reader-mode toggle button's visibility SHALL be governed by an explicit, documented platform capability check rather than silently defaulting to hidden because `onReadabilityDetermined` is never called
+
+#### Scenario: Supported platform (iOS/Android) behavior is unchanged
+- **WHEN** the app runs on iOS or Android
+- **THEN** `onReadabilityDetermined` fires as before and the toggle button visibility reflects the live readability result

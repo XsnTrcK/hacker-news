@@ -68,7 +68,7 @@ When Readability successfully extracts content, the system SHALL skip nav-tag re
 - **AND** no `<nav>` regex pass is performed on the Readability output
 
 ### Requirement: Concurrent `onPageFinished` invocations are serialized
-`WebViewCarrier._onPageFinished` SHALL be re-entrant-safe. If a second invocation is triggered (e.g., by an HTTP → HTTPS redirect) while the first is suspended at an `await` point, the second invocation SHALL return immediately without injecting the Readability bundle, running `isProbablyReaderable`, or calling Readability. Only the first invocation completes the extraction.
+`WebViewCarrier._onPageFinished` SHALL be re-entrant-safe with respect to both a second `onPageFinished` invocation and a concurrent `onWebResourceError` callback. If a second invocation is triggered (e.g., by an HTTP → HTTPS redirect) while the first is suspended at an `await` point, the second invocation SHALL return immediately without injecting the Readability bundle, running `isProbablyReaderable`, or calling Readability. Only the first invocation completes the extraction. If `onWebResourceError` fires for the main frame while an `_onPageFinished` extraction is still in flight (suspended at any `await` point), the in-flight extraction SHALL check for the error-set terminal state before writing `cachedIsReaderable`/`cachedReaderHtml` or firing `onReadabilityDetermined`/`onLoadComplete` again, so the two code paths cannot overwrite each other's result or invoke callbacks with contradictory values.
 
 #### Scenario: Redirect triggers double `onPageFinished`
 - **WHEN** a page redirects from HTTP to HTTPS and `onPageFinished` fires for both the original and redirect URLs before the first extraction completes
@@ -77,3 +77,18 @@ When Readability successfully extracts content, the system SHALL skip nav-tag re
 #### Scenario: Single page load without redirect
 - **WHEN** `onPageFinished` fires exactly once for a page
 - **THEN** extraction proceeds normally with no change to the happy-path behaviour
+
+#### Scenario: Main-frame error races with in-flight extraction
+- **WHEN** `onWebResourceError` fires for the main frame while a prior `_onPageFinished` invocation is still suspended at an `await` (e.g., awaiting the Readability bundle or a `_runJs` call)
+- **THEN** `cachedIsReaderable` is set to `false` by the error handler, and the in-flight extraction MUST NOT overwrite `cachedIsReaderable` or invoke `onReadabilityDetermined`/`onLoadComplete` again once the error has already resolved the page's readability state
+
+### Requirement: Readability failure state resets on subsequent navigation
+When `WebViewCarrier.loadOriginal()` is called to reload or re-navigate the underlying page, the carrier SHALL reset `cachedIsReaderable` and `cachedReaderHtml` to `null` so that a subsequent `onPageFinished` re-attempts Readability analysis instead of being short-circuited by a prior failed attempt.
+
+#### Scenario: Retry after a failed first pass
+- **WHEN** a page's first `onPageFinished` analysis concludes `cachedIsReaderable == false` (e.g., due to a premature check on unhydrated SPA content), and the page later reloads via `loadOriginal()`
+- **THEN** the next `onPageFinished` for that navigation re-runs `isProbablyReaderable` and, if applicable, the full Readability parse — it is not skipped by the earlier `false` result
+
+#### Scenario: Successful extraction is not needlessly re-run
+- **WHEN** `cachedReaderHtml` is already populated from a successful extraction and no `loadOriginal()` call has occurred since
+- **THEN** subsequent `onPageFinished` invocations continue to short-circuit as before, avoiding redundant extraction work

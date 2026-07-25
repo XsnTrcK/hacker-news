@@ -7,15 +7,19 @@ When a WebView navigates to a URL with a non-http(s) scheme (e.g., deep links, c
 ## Requirements
 
 ### Requirement: WebView intercepts non-http(s) navigations
-The WebView SHALL intercept all navigation requests whose URL scheme is not `http` or `https` and prevent the WebView from attempting to load them.
+The WebView SHALL intercept all navigation requests whose URL scheme is not `http` or `https` and prevent the WebView from attempting to load them, EXCEPT for the `about` scheme, which the WebView engine issues for its own internal navigations (e.g., `about:blank` during view initialization, `about:srcdoc` for sandboxed iframes) and which SHALL be allowed to navigate normally without triggering external-link interception.
 
 #### Scenario: Custom scheme navigation is blocked
-- **WHEN** the WebView attempts to navigate to a URL with a non-http(s) scheme (e.g., `x-safari-https://`)
+- **WHEN** the WebView attempts to navigate to a URL with a non-http(s), non-`about` scheme (e.g., `x-safari-https://`)
 - **THEN** the WebView returns `NavigationDecision.prevent`, the navigation is cancelled, and the WebView remains on the current page
 
 #### Scenario: Standard http navigation is not intercepted
 - **WHEN** the WebView navigates to a URL with scheme `http` or `https`
 - **THEN** the WebView returns `NavigationDecision.navigate` and loads the page normally
+
+#### Scenario: Internal `about:` navigations are not intercepted
+- **WHEN** the WebView engine issues an internal navigation request with scheme `about` (e.g., `about:blank` on initialization, `about:srcdoc` for a sandboxed iframe)
+- **THEN** the WebView returns `NavigationDecision.navigate` and no external-navigation confirmation dialog is shown
 
 ### Requirement: App checks platform handler availability before prompting
 Before showing any dialog, the app SHALL query the platform to determine whether an installed app can handle the intercepted URL scheme.
@@ -57,3 +61,14 @@ When the user confirms, the app SHALL call `launchUrl` in external application m
 #### Scenario: External launch fails
 - **WHEN** the user taps "Open" but `launchUrl` throws or returns `false`
 - **THEN** a brief error message is surfaced to the user (e.g., snackbar/InfoBar) and the WebView remains on the current page
+
+### Requirement: Confirmation dialog uses its own context and is dismissed safely on host disposal
+The external-navigation confirmation dialog's action callbacks SHALL use the `BuildContext` supplied to the dialog's own `builder`, not the host widget's `context`. If the host `MobileWebView` is disposed while the dialog is still showing, the dialog SHALL be dismissed without throwing.
+
+#### Scenario: Dialog buttons use the dialog's context
+- **WHEN** the user taps "Cancel" or "Open" in the external-navigation confirmation dialog
+- **THEN** `Navigator.pop` is called using the `BuildContext` provided by the dialog's own `builder` callback, not the enclosing `_MobileWebViewState.context`
+
+#### Scenario: Host widget disposed while dialog is open
+- **WHEN** `_MobileWebViewState.dispose()` runs while the external-navigation confirmation dialog is still awaiting user input
+- **THEN** the dialog is dismissed as part of disposal and no exception is thrown from a stale context lookup

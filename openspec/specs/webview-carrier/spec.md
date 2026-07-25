@@ -38,3 +38,29 @@ Defines the lifecycle and API contract for `WebViewCarrier` — the object that 
 #### Scenario: Reader style updates on theme change
 - **WHEN** the app theme changes while `MobileWebView` is mounted
 - **THEN** `didChangeDependencies()` fires, updates `_readerViewStyle`, and the next `build()` uses the new value without needing its own assignment
+
+---
+
+### Requirement: `_carrier` reference is re-synchronized when `widget.carrier` identity changes
+`_MobileWebViewState.didUpdateWidget` SHALL compare `oldWidget.carrier` and `widget.carrier` by identity. When they differ, the state SHALL detach or dispose the previous carrier's wiring as appropriate for its prior ownership, adopt the new carrier (rewiring its callbacks and re-running `_reconcileDisplayState`), and update the ownership flag (`_ownsCarrier`) to reflect whether the new carrier is externally supplied.
+
+#### Scenario: Parent supplies a new carrier for the same widget slot
+- **WHEN** `ViewArticles` evicts and later recreates the `WebViewCarrier` for a given page index, and Flutter reuses the existing `MobileWebView` `State` for that slot (no explicit key)
+- **THEN** `didUpdateWidget` detects `oldWidget.carrier != widget.carrier`, rewires all carrier callbacks onto the new carrier, and subsequent interactions (`canGoBack`, loading state, reader-mode toggling) reflect the new carrier — not the disposed one
+
+#### Scenario: Carrier identity is unchanged across a rebuild
+- **WHEN** `MobileWebView` rebuilds with the same `widget.carrier` instance as before
+- **THEN** no re-wiring occurs and existing carrier callbacks remain attached
+
+---
+
+### Requirement: Reader-HTML load has a fallback completion signal
+When `MobileWebView` transitions into reader mode via `_reconcileDisplayState`, the loading state (`_isLoading`/`_awaitingReaderHtml`) SHALL be cleared by a fallback timeout if the `ReaderReady` JavaScript channel message does not arrive within a bounded duration, in addition to the existing message-driven completion path.
+
+#### Scenario: ReaderReady message never arrives
+- **WHEN** reader HTML is loaded via `loadReaderHtml` and the trailing `ReaderReady` postMessage script does not execute (e.g., malformed content, WebView engine quirk) within the fallback duration
+- **THEN** the loading spinner is dismissed by the fallback timeout instead of remaining visible indefinitely
+
+#### Scenario: ReaderReady message arrives normally
+- **WHEN** the `ReaderReady` message fires before the fallback timeout elapses
+- **THEN** the message-driven path clears the loading state as before, and the fallback timeout is cancelled with no visible effect

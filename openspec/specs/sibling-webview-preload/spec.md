@@ -28,11 +28,15 @@ The `onReadabilityDetermined` callback in `DisplayArticle` SHALL guard the `setS
 - **THEN** `onLoadComplete` is called exactly once — the loading spinner is dismissed and `_reconcileDisplayState` runs exactly one time
 
 ### Requirement: Carrier index range uses consistent bounds
-`_ensureCarriersFor` in `ViewArticles` SHALL clamp both `start` and `end` to `[0, articles.length - 1]`. The upper bound for `start` SHALL be `articles.length - 1`, not `articles.length`.
+`_ensureCarriersFor` in `ViewArticles` SHALL clamp both `start` and `end` to `[0, articles.length - 1]`. The upper bound for `start` SHALL be `articles.length - 1`, not `articles.length`. `_ViewArticlesState.initState()` SHALL guard its own `_currentIndex` computation against an empty `articles` list — it SHALL NOT call `.clamp(0, articles.length - 1)` when `articles` is empty, since that throws `ArgumentError` (lower limit greater than upper limit).
 
 #### Scenario: Clamping at list boundaries
 - **WHEN** `current == 0` and `_preloadRange == 1`
 - **THEN** `start == 0` and `end == min(1, articles.length - 1)`, with no index exceeding `articles.length - 1`
+
+#### Scenario: Empty article list does not throw on init
+- **WHEN** `ViewArticles` is constructed with an empty `articles` list
+- **THEN** `initState()` completes without throwing `ArgumentError`, and `_ensureCarriersFor` short-circuits with no carriers created
 
 ### Requirement: Carrier lifecycle side effects are not inside `setState`
 `_onPageChanged` in `ViewArticles` SHALL call `_ensureCarriersFor` after (not inside) the `setState` callback, so that `WebViewCarrier` creation and disposal do not occur within Flutter's state-update microtask.
