@@ -39,6 +39,7 @@ class _MobileWebViewState extends State<MobileWebView> {
   bool _isLoading = true;
   bool _awaitingReaderHtml = false;
   bool _showingReader = false;
+  bool _retriedAfterLoadFailure = false;
   late String _readerViewStyle;
   bool _initialRenderChecked = false;
   Timer? _readerHtmlTimeoutTimer;
@@ -114,10 +115,40 @@ class _MobileWebViewState extends State<MobileWebView> {
     widget.onReadabilityDetermined?.call(isReaderable);
   }
 
+  String _stripFragment(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    return uri.removeFragment().toString();
+  }
+
   void _onCarrierUrlChanged(UrlChange change) {
     if (!mounted) return;
+    final newCanGoBack = change.url != null && change.url != _resolvedUrl;
+    final strippedChangedUrl =
+        change.url == null ? null : _stripFragment(change.url!);
+    // Reader mode is sticky and applies to whatever page is currently
+    // loaded, including pages reached by tapping links. Distinguish a
+    // genuine navigation (the URL now differs from what the carrier's cache
+    // is scoped to) from the carrier's own loadReaderHtml()/loadOriginal()
+    // call settling back to the same page it already had cached.
+    final isSamePageAsCache = strippedChangedUrl != null &&
+        strippedChangedUrl == _carrier.extractedForUrl;
+    if (!isSamePageAsCache) {
+      // The reader HTML that may have been showing is for the page just
+      // left, not whatever is loading now. This is also a genuinely new
+      // navigation attempt, so give it a fresh chance to retry if it hits
+      // the same load-failed-without-result dead end as a previous one.
+      _showingReader = false;
+      _retriedAfterLoadFailure = false;
+    }
     setState(() {
-      canGoBack = change.url != null && change.url != _resolvedUrl;
+      canGoBack = newCanGoBack;
+      if (!isSamePageAsCache && widget.displayReaderMode) {
+        // Hold the spinner so the live page never flashes before the new
+        // page's own reader-mode result lands, since reader mode is
+        // currently on. Harmless no-op if _isLoading is already true.
+        _isLoading = true;
+      }
     });
   }
 
@@ -166,7 +197,36 @@ class _MobileWebViewState extends State<MobileWebView> {
   }
 
   void _reconcileDisplayState() {
-    if (!_carrier.isReady) return;
+    if (!_carrier.isReady) {
+      if (widget.displayReaderMode && _carrier.loadFailedWithoutResult) {
+        // The load already concluded (a main-frame error) without ever
+        // producing a result — on iOS this happens for a phantom, empty
+        // WebResourceError that WKWebView sometimes fires on goBack()
+        // restoration, even though the page is actually showing fine and a
+        // genuine loadRequest() of the same URL works reliably (confirmed:
+        // the same repro never hits this on Android). Since onPageFinished
+        // is never coming to clear a spinner here, retry once with a real
+        // reload instead of leaving reader mode permanently stuck off for
+        // this page. Bounded to one retry so a genuinely broken page can't
+        // loop forever.
+        if (!_retriedAfterLoadFailure) {
+          _retriedAfterLoadFailure = true;
+          setState(() => _isLoading = true);
+          _carrier.loadOriginal();
+        }
+        return;
+      }
+      if (widget.displayReaderMode) {
+        // Reader mode is wanted but the carrier hasn't finished analyzing
+        // the current page yet (e.g. the user toggled it on right after
+        // navigating, before analysis completed). Show the spinner instead
+        // of silently doing nothing until _onCarrierLoadComplete calls this
+        // again once analysis finishes — that later call clears _isLoading
+        // regardless of its outcome, so this can't get stuck.
+        setState(() => _isLoading = true);
+      }
+      return;
+    }
     if (widget.displayReaderMode && _carrier.hasReaderHtml) {
       if (_awaitingReaderHtml) return;
       setState(() {
@@ -206,12 +266,17 @@ class _MobileWebViewState extends State<MobileWebView> {
         _isLoading = !_carrier.isReady;
         _awaitingReaderHtml = false;
         _showingReader = false;
+        _retriedAfterLoadFailure = false;
         canGoBack = false;
       });
       _checkInitialCarrierState();
       return;
     }
     if (oldWidget.displayReaderMode != widget.displayReaderMode) {
+      // Keep the carrier's live value in sync so analysis triggered by any
+      // later in-page navigation (link clicks) sees the current sticky
+      // toggle, not whatever was true when the carrier was first built.
+      _carrier.displayReaderMode = widget.displayReaderMode;
       _reconcileDisplayState();
     }
   }

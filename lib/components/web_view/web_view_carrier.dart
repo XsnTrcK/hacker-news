@@ -13,12 +13,23 @@ class WebViewCarrier {
   static final RegExp _localStyleRegExp =
       RegExp('style="[a-zA-Z0-9#:%;\\s-]+"');
 
-  final bool? displayReaderMode;
+  // Mutable (not constructor-only): the caller keeps this in sync with the
+  // current sticky reader-mode toggle as it changes, so that analysis
+  // triggered by later in-page navigation (link clicks) reflects the latest
+  // value rather than whatever was true when the carrier was first built.
+  bool? displayReaderMode;
 
   late final Future<void> _bundleReady;
   String _readabilityBundle = '';
   String? cachedReaderHtml;
   bool? cachedIsReaderable;
+  String? _extractedForUrl;
+  // Set when the current load attempt concluded (via onWebResourceError)
+  // without ever producing a readability result — distinct from
+  // cachedIsReaderable, which stays null (not false) in that case so a
+  // load error can never flip toggle visibility. Consulted only to stop a
+  // caller from waiting indefinitely for a determination that isn't coming.
+  bool _loadFailedWithoutResult = false;
   bool _analysisInProgress = false;
   bool _loadCompleteFired = false;
   bool _isDisposed = false;
@@ -39,6 +50,25 @@ class WebViewCarrier {
   bool get isReady => cachedIsReaderable != null;
 
   bool get hasReaderHtml => cachedReaderHtml != null;
+
+  // Exposed so MobileWebView can tell whether a reported URL change is a
+  // genuine navigation to a different page versus the carrier's own
+  // loadReaderHtml()/loadOriginal() call settling back to the same page.
+  String? get extractedForUrl => _extractedForUrl;
+
+  // Whether the current load attempt already concluded without a
+  // readability result (a main-frame load error). Callers that want reader
+  // mode should stop waiting/spinning once this is true, since no
+  // onPageFinished is coming for this attempt.
+  bool get loadFailedWithoutResult => _loadFailedWithoutResult;
+
+  // Whether a determination's URL is for the carrier's own resolvedUrl,
+  // rather than a page reached via a link — used to gate
+  // onReadabilityDetermined so it only ever reports the original article's
+  // result, keyed on URL identity (stable for the carrier's lifetime)
+  // rather than call order.
+  bool _isOwnUrl(String? strippedUrl) =>
+      strippedUrl != null && strippedUrl == _stripFragment(resolvedUrl);
 
   void _bootstrap() {
     _bundleReady =
@@ -78,20 +108,42 @@ class WebViewCarrier {
           return NavigationDecision.navigate;
         },
         onPageFinished: (url) {
-          _onPageFinished();
+          _onPageFinished(url);
         },
         onWebResourceError: (error) {
           // iOS + Android: when the main frame fails (SSL error, ATS block,
           // network timeout) onPageFinished never fires, leaving _isLoading
-          // stuck. Mark the page non-readable and clear the spinner.
+          // stuck if nothing clears it. Only clear the spinner here — do NOT
+          // declare the page non-readable. A load failure is not a
+          // determination about the page's *content*: if this URL was
+          // already known to be readerable from an earlier successful load
+          // (e.g. a transient/spurious main-frame error while re-navigating
+          // back to the article), asserting `false` here would wrongly hide
+          // the toggle for a page that genuinely is readerable.
           if (error.isForMainFrame == false) return;
           if (!isReady) {
-            cachedIsReaderable = false;
-            onReadabilityDetermined?.call(false);
+            _loadFailedWithoutResult = true;
             onLoadComplete?.call();
           }
         },
         onUrlChange: (change) {
+          // Invalidate eagerly, at navigation-start, not just in
+          // _onPageFinished (load-complete). onUrlChanged below can
+          // synchronously trigger MobileWebView's display logic well before
+          // the new page's own onPageFinished has a chance to invalidate a
+          // stale cache — without this, that logic could act on the
+          // previous page's cache.
+          final changedUrl = change.url;
+          if (changedUrl != null) {
+            final stripped = _stripFragment(changedUrl);
+            final willInvalidate = _extractedForUrl != stripped;
+            if (willInvalidate) {
+              cachedReaderHtml = null;
+              cachedIsReaderable = null;
+              _extractedForUrl = null;
+              _loadFailedWithoutResult = false;
+            }
+          }
           onUrlChanged?.call(change);
         },
       ))
@@ -115,9 +167,31 @@ class WebViewCarrier {
     onLoadComplete?.call();
   }
 
-  Future<void> _onPageFinished() async {
-    if (cachedReaderHtml != null || cachedIsReaderable == false) return;
-    if (_analysisInProgress) return;
+  String _stripFragment(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+    return uri.removeFragment().toString();
+  }
+
+  Future<void> _onPageFinished(String loadedUrl) async {
+    final strippedLoadedUrl = _stripFragment(loadedUrl);
+    // The cache is only valid for the URL it was extracted from. If a
+    // different page just finished loading (e.g. the user clicked a link
+    // inside reader-mode HTML), any existing cache — including one left
+    // behind by onWebResourceError, which doesn't track _extractedForUrl —
+    // belongs to the wrong page and must not short-circuit analysis below.
+    if (_extractedForUrl != strippedLoadedUrl) {
+      cachedReaderHtml = null;
+      cachedIsReaderable = null;
+      _extractedForUrl = null;
+      _loadFailedWithoutResult = false;
+    }
+    if (cachedReaderHtml != null || cachedIsReaderable == false) {
+      return;
+    }
+    if (_analysisInProgress) {
+      return;
+    }
     _analysisInProgress = true;
     _loadCompleteFired = false;
 
@@ -143,7 +217,14 @@ class WebViewCarrier {
         if (_isDisposed) return;
         if (isReaderable != 'true') {
           cachedIsReaderable = false;
-          onReadabilityDetermined?.call(false);
+          _extractedForUrl = strippedLoadedUrl;
+          _loadFailedWithoutResult = false;
+          // Only report through this callback for the carrier's own URL —
+          // see _isOwnUrl for why this is gated on identity rather than
+          // being unconditional.
+          if (_isOwnUrl(strippedLoadedUrl)) {
+            onReadabilityDetermined?.call(false);
+          }
           _fireLoadComplete();
           return;
         }
@@ -174,7 +255,11 @@ class WebViewCarrier {
 
       if (html != null) cachedReaderHtml = html;
       cachedIsReaderable = html != null;
-      onReadabilityDetermined?.call(html != null);
+      _extractedForUrl = strippedLoadedUrl;
+      _loadFailedWithoutResult = false;
+      if (_isOwnUrl(strippedLoadedUrl)) {
+        onReadabilityDetermined?.call(html != null);
+      }
       _fireLoadComplete();
     } finally {
       // Reset so a later, non-concurrent invocation (e.g. after loadOriginal()
@@ -196,13 +281,27 @@ class WebViewCarrier {
         '${_stripStyle(html)}'
         '</body></html>'
         "<script>window.ReaderReady.postMessage('ready');</script>";
-    await controller.loadHtmlString(wrapped, baseUrl: resolvedUrl);
+    // baseUrl must match the page this HTML was actually extracted from —
+    // not always resolvedUrl, since the webview may have since navigated
+    // away from the carrier's own URL — so relative links/images resolve
+    // against the right site.
+    await controller.loadHtmlString(wrapped,
+        baseUrl: _extractedForUrl ?? resolvedUrl);
   }
 
   Future<void> loadOriginal() async {
-    cachedIsReaderable = null;
-    cachedReaderHtml = null;
-    await controller.loadRequest(Uri.parse(resolvedUrl));
+    // Reload whatever page the cache is currently scoped to, not always the
+    // carrier's own resolvedUrl — the webview may have navigated to a
+    // different page since. Captured before any reset below, since a reset
+    // clears _extractedForUrl.
+    final targetUrl = _extractedForUrl ?? resolvedUrl;
+    if (cachedReaderHtml == null) {
+      // Nothing successful to reuse (never analyzed, or the last attempt
+      // failed) — clear defensively so the next onPageFinished retries.
+      cachedIsReaderable = null;
+      _extractedForUrl = null;
+    }
+    await controller.loadRequest(Uri.parse(targetUrl));
   }
 
   String _stripStyle(String html) =>

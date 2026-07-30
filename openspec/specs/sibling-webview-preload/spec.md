@@ -3,9 +3,7 @@
 ## Purpose
 
 Defines correctness requirements for the preload system that simultaneously mounts sibling `DisplayArticle` widgets. Covers panel isolation, lifecycle safety, load-completion signalling, index-range bounds, and ordering of carrier side effects relative to Flutter state updates.
-
 ## Requirements
-
 ### Requirement: Panel controller is per-article instance
 Each `DisplayArticle` widget SHALL own its own `PanelController` instance. Opening or closing the comments panel on one article SHALL NOT affect the sliding panel state of any sibling article that is simultaneously mounted by the preload system.
 
@@ -123,11 +121,15 @@ When the user swipes from the current article to a previously-pre-warmed sibling
 - **THEN** the raw webview is displayed with no spinner visible
 
 ### Requirement: Reader mode toggle reuses cached state
-When the user toggles reader mode on a previously-visited article whose webview is still warm, the system MUST use the cached `_downloadedHtml` rather than re-running Readability.
+When the user toggles reader mode off then on for a previously-visited article whose webview is still warm (either the current article or a sibling kept alive by the preload reuse window), and no navigation away from the article's URL has occurred in between, the system MUST reuse the cached `cachedReaderHtml`/`cachedIsReaderable` on `WebViewCarrier` rather than re-running Readability. This holds because `WebViewCarrier.loadOriginal()` only clears the cache when there is no successful extraction to preserve; a successful extraction for the article's own URL survives the toggle-off reload untouched.
 
 #### Scenario: Toggle reader mode off then on for a warm sibling
-- **WHEN** the user toggles reader mode off then on for an article whose webview is still alive in the sibling cache
-- **THEN** reader HTML is rendered from the cached parse without re-running the Readability JS bundle or `isProbablyReaderable`
+- **WHEN** the user toggles reader mode off then on for an article whose webview is still alive in the sibling cache, with no link navigation in between
+- **THEN** reader HTML is rendered from the cached `cachedReaderHtml` without re-running the Readability JS bundle or `isProbablyReaderable`
+
+#### Scenario: Toggle reader mode on after navigating away no longer reuses the stale cache
+- **WHEN** the user was shown reader mode for an article, navigated to a different page via a link inside the reader content, and then triggers reader mode again for that new page
+- **THEN** the system does NOT reuse the original article's cached reader HTML — the cache was invalidated when the new page loaded, and a fresh Readability analysis determines the new page's own reader-mode eligibility
 
 ### Requirement: Callbacks are silently dropped after carrier disposal
 After `WebViewCarrier.dispose()` is called, any in-flight async operations inside the carrier (e.g., `_onPageFinished` suspended at an `await`) SHALL NOT invoke `onReadabilityDetermined`, `onLoadComplete`, `onHtmlReady`, or `onExternalNavigation` — even if those callbacks are still set at the time the `await` resolves. The carrier SHALL maintain an internal `_isDisposed` flag checked after each `await` boundary.
@@ -143,3 +145,4 @@ After `WebViewCarrier.dispose()` is called, any in-flight async operations insid
 #### Scenario: Normal extraction completes before disposal
 - **WHEN** `_onPageFinished` runs to completion and `dispose()` is called afterward
 - **THEN** all callbacks have already fired normally and no double-invocation or error occurs
+
