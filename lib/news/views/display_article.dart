@@ -1,5 +1,7 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'dart:io';
+
 import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/scheduler.dart';
@@ -8,6 +10,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:hackernews/comments/views/comments_section.dart';
 import 'package:hackernews/components/item_details.dart';
 import 'package:hackernews/components/web_view/web_view.dart';
+import 'package:hackernews/components/web_view/web_view_carrier.dart';
 import 'package:hackernews/models/item.dart';
 import 'package:hackernews/news/bloc/item_bloc.dart';
 import 'package:hackernews/news/bloc/item_events.dart';
@@ -21,20 +24,27 @@ import 'package:hackernews/store/store.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class DisplayArticle extends StatefulWidget {
-  static final PanelController _panelController = PanelController();
   final TitledItem item;
   final int? childId;
+  final WebViewCarrier? carrier;
 
-  const DisplayArticle(this.item, {super.key, this.childId});
+  const DisplayArticle(this.item, {super.key, this.childId, this.carrier});
 
   @override
   State<DisplayArticle> createState() => _DisplayArticle();
 }
 
 class _DisplayArticle extends State<DisplayArticle> {
+  final PanelController _panelController = PanelController();
   final GlobalKey<State<DisplayArticle>> _collapsedKey = GlobalKey();
   Size _collapsedSize = const Size(0, 0);
   ItemWithKids? _hnMatch;
+  bool _isReaderable = false;
+
+  // Windows' WebView implementation doesn't run Readability analysis, so
+  // onReadabilityDetermined never fires there — hide the toggle explicitly
+  // rather than leaving its absence as an implicit side effect.
+  bool get _supportsReaderMode => !Platform.isWindows;
 
   ItemWithKids? _commentItem(TitledItem item) {
     if (item is RssStoryItem) {
@@ -66,16 +76,18 @@ class _DisplayArticle extends State<DisplayArticle> {
     return Row(
       children: [
         Expanded(
-            child: IconButton(
-          icon: Icon(item.state.displayReaderMode
-              ? FluentIcons.reading_mode_solid
-              : FluentIcons.reading_mode),
-          onPressed: () {
-            context
-                .read<ItemBloc<TitledItem>>()
-                .add(DisplayReaderModeEvent(item));
-          },
-        )),
+            child: (_isReaderable && _supportsReaderMode)
+                ? IconButton(
+                    icon: Icon((item.state.displayReaderMode ?? false)
+                        ? FluentIcons.reading_mode_solid
+                        : FluentIcons.reading_mode),
+                    onPressed: () {
+                      context
+                          .read<ItemBloc<TitledItem>>()
+                          .add(DisplayReaderModeEvent(item));
+                    },
+                  )
+                : const SizedBox.shrink()),
         Expanded(
           flex: 8,
           child: (comentItem != null && comentItem.numberOfChildren > 0)
@@ -84,8 +96,8 @@ class _DisplayArticle extends State<DisplayArticle> {
                       ? FluentIcons.chevron_up_small
                       : FluentIcons.chevron_down_small),
                   onPressed: () => collapsed
-                      ? DisplayArticle._panelController.open()
-                      : DisplayArticle._panelController.close(),
+                      ? _panelController.open()
+                      : _panelController.close(),
                 )
               : const SizedBox.shrink(),
         ),
@@ -190,7 +202,7 @@ class _DisplayArticle extends State<DisplayArticle> {
                 if (widget.childId != null) {
                   SchedulerBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
-                      DisplayArticle._panelController.open();
+                      _panelController.open();
                     }
                   });
                 }
@@ -198,15 +210,15 @@ class _DisplayArticle extends State<DisplayArticle> {
                 return SlidingUpPanel(
                   isDraggable:
                       comentItem != null && comentItem.numberOfChildren > 0,
-                  controller: DisplayArticle._panelController,
+                  controller: _panelController,
                   onPanelOpened: () {
-                    if (!DisplayArticle._panelController.isPanelOpen) {
-                      DisplayArticle._panelController.open();
+                    if (!_panelController.isPanelOpen) {
+                      _panelController.open();
                     }
                   },
                   onPanelClosed: () {
-                    if (!DisplayArticle._panelController.isPanelClosed) {
-                      DisplayArticle._panelController.close();
+                    if (!_panelController.isPanelClosed) {
+                      _panelController.close();
                     }
                   },
                   maxHeight: maxHeight,
@@ -217,7 +229,20 @@ class _DisplayArticle extends State<DisplayArticle> {
                             mediaQueryData.padding.top +
                             mediaQueryData.padding.bottom),
                     child: WebView(
-                        storyItem.url, storyItem.state.displayReaderMode),
+                      storyItem.url,
+                      storyItem.state.displayReaderMode ?? false,
+                      carrier: widget.carrier,
+                      onReadabilityDetermined: (v) {
+                        if (mounted) setState(() { _isReaderable = v; });
+                        if (v &&
+                            mounted &&
+                            storyItem.state.displayReaderMode == null) {
+                          context
+                              .read<ItemBloc<TitledItem>>()
+                              .add(DisplayReaderModeEvent(storyItem));
+                        }
+                      },
+                    ),
                   ),
                   collapsed: Container(
                     key: _collapsedKey,

@@ -26,14 +26,47 @@ extension FluentTheming on FluentThemeData {
   Color get textColor =>
       brightness == Brightness.dark ? Colors.white : Colors.black;
 
-  static const String _darkReaderViewStyle =
-      "<style>div {color:#FFFFFF;font-size:40px;} p {color:#FFFFFF;font-size:40px;} a {color:#CCFFFE;} h1 {color:#FFFFFF;font-size:120px;} h2 {color:#FFFFFF;font-size:80px;} h3 {color:#FFFFFF;font-size:60px;} li {color:#FFFFFF;font-size:40px;} ul {color:#FFFFFF;font-size:40px;} img {max-width:98%;height:auto;} pre {white-space:pre-wrap;max-width:98%;height:auto;}</style>";
-  static const String _lightReaderViewStyle =
-      "<style>div {color:#000000;font-size:40px;} p {color:#000000;font-size:40px;} h1 {color:#000000;font-size:120px;} h2 {color:#000000;font-size:80px;} h3 {color:#000000;font-size:60px;} li {color:#000000;font-size:40px;} ul {color:#000000;font-size:40px;} img {max-width:98%;height:auto;} pre {white-space:pre-wrap;max-width:98%;height:auto;}</style>";
+  String get readerViewStyle {
+    final dark = brightness == Brightness.dark;
+    final color = dark ? '#FFFFFF' : '#000000';
+    final bg = dark ? '#000000' : '#FFFFFF';
+    final linkColor = dark ? '#CCFFFE' : '#0066CC';
+    final body = _readerBodySize;
+    final h1 = _readerH1Size;
+    final h2 = _readerH2Size;
+    final h3 = _readerH3Size;
+    return "<style>"
+        "body{color:$color;background-color:$bg;font-size:${body}px;line-height:1.6;padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}"
+        "h1{font-size:${h1}px;line-height:1.2;font-weight:700;margin-bottom:12px;}"
+        "h2{font-size:${h2}px;line-height:1.3;font-weight:600;}"
+        "h3{font-size:${h3}px;line-height:1.3;font-weight:600;}"
+        "p{margin-bottom:12px;}"
+        "a{color:$linkColor;}"
+        "img{max-width:100%;height:auto;display:block;margin:12px 0;}"
+        "pre{white-space:pre-wrap;max-width:100%;overflow-x:auto;font-size:${body - 2}px;}"
+        "li{margin-bottom:4px;}"
+        "</style>";
+  }
 
-  String get readerViewStyle => brightness == Brightness.dark
-      ? _darkReaderViewStyle
-      : _lightReaderViewStyle;
+  /// Returns the value matching the current `settings.fontSize`.
+  T _byFontSize<T>(T small, T medium, T large) {
+    switch (settings.fontSize) {
+      case SettingsFontSize.small:
+        return small;
+      case SettingsFontSize.medium:
+        return medium;
+      case SettingsFontSize.large:
+        return large;
+    }
+  }
+
+  int get _readerBodySize => _byFontSize(15, 17, 19);
+
+  int get _readerH1Size => _byFontSize(24, 28, 32);
+
+  int get _readerH2Size => _byFontSize(19, 22, 25);
+
+  int get _readerH3Size => _byFontSize(17, 19, 21);
 
   Typography get dynamicTypography {
     return typography.merge(
@@ -82,80 +115,17 @@ extension FluentTheming on FluentThemeData {
     );
   }
 
-  double get _captionFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 11;
-      case SettingsFontSize.medium:
-        return 13;
-      case SettingsFontSize.large:
-        return 15;
-    }
-  }
+  double get _captionFontSize => _byFontSize(11, 13, 15);
 
-  double get _bodyFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 13;
-      case SettingsFontSize.medium:
-        return 15;
-      case SettingsFontSize.large:
-        return 17;
-    }
-  }
+  double get _bodyFontSize => _byFontSize(13, 15, 17);
 
-  double get _bodyLargeFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 17;
-      case SettingsFontSize.medium:
-        return 19;
-      case SettingsFontSize.large:
-        return 21;
-    }
-  }
+  double get _bodyLargeFontSize => _byFontSize(17, 19, 21);
 
-  double get _subTitleFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 19;
-      case SettingsFontSize.medium:
-        return 21;
-      case SettingsFontSize.large:
-        return 23;
-    }
-  }
+  double get _subTitleFontSize => _byFontSize(19, 21, 23);
 
-  double get _titleFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 27;
-      case SettingsFontSize.medium:
-        return 29;
-      case SettingsFontSize.large:
-        return 31;
-    }
-  }
+  double get _titleFontSize => _byFontSize(27, 29, 31);
 
-  double get _titleLargeFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 39;
-      case SettingsFontSize.medium:
-        return 41;
-      case SettingsFontSize.large:
-        return 43;
-    }
-  }
+  double get _titleLargeFontSize => _byFontSize(39, 41, 43);
 
-  double get _displayFontSize {
-    switch (settings.fontSize) {
-      case SettingsFontSize.small:
-        return 67;
-      case SettingsFontSize.medium:
-        return 69;
-      case SettingsFontSize.large:
-        return 71;
-    }
-  }
+  double get _displayFontSize => _byFontSize(67, 69, 71);
 }
