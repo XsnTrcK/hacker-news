@@ -17,9 +17,11 @@
       <rect x="212" y="337" width="600" height="175" fill="#F6C358"/>
       <rect x="212" y="512" width="600" height="175" fill="#59CDA0"/>
       <rect x="212" y="687" width="600" height="175" fill="#5AC8E0"/>
+      <rect x="212" y="192" width="300" height="300" fill="#F49B57"/>
     </g>
     <g stroke="#34374B" stroke-width="46" stroke-linecap="butt">
-      <line x1="212" y1="337" x2="812" y2="337"/>
+      <line x1="522" y1="162" x2="522" y2="512"/>
+      <line x1="512" y1="337" x2="812" y2="337"/>
       <line x1="212" y1="512" x2="812" y2="512"/>
       <line x1="212" y1="687" x2="812" y2="687"/>
     </g>
@@ -30,13 +32,15 @@
     <path d="M 693.5 732.8 L 753.5 773.5 L 693.5 809.3" fill="none" stroke="#34374B"
           stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <!-- RSS badge, contained within the top-right corner of the pink band -->
+    <!-- RSS badge, enlarged to fill the orange section spanning rows 1-2; three concentric arcs -->
     <g fill="none" stroke-linecap="round">
-      <path d="M 690 238 A 40 40 0 0 1 725 278" stroke="#34374B" stroke-width="26"/>
-      <path d="M 690 208 A 72 72 0 0 1 757 280" stroke="#34374B" stroke-width="26"/>
-      <path d="M 690 238 A 40 40 0 0 1 725 278" stroke="#FFFFFF" stroke-width="16"/>
-      <path d="M 690 208 A 72 72 0 0 1 757 280" stroke="#FFFFFF" stroke-width="16"/>
+      <path d="M 315 343 A 57 57 0 0 1 372 400" stroke="#34374B" stroke-width="34"/>
+      <path d="M 315 302 A 98 98 0 0 1 413 400" stroke="#34374B" stroke-width="34"/>
+      <path d="M 315 262 A 138 138 0 0 1 453 400" stroke="#34374B" stroke-width="34"/>
+      <path d="M 315 343 A 57 57 0 0 1 372 400" stroke="#FFFFFF" stroke-width="20"/>
+      <path d="M 315 302 A 98 98 0 0 1 413 400" stroke="#FFFFFF" stroke-width="20"/>
+      <path d="M 315 262 A 138 138 0 0 1 453 400" stroke="#FFFFFF" stroke-width="20"/>
     </g>
-    <circle cx="682" cy="282" r="24" fill="#FFFFFF" stroke="#34374B" stroke-width="6"/>
+    <circle cx="315" cy="400" r="30" fill="#FFFFFF" stroke="#34374B" stroke-width="7"/>
   </g>
 </svg>
