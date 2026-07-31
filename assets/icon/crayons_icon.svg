@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <clipPath id="stackClip2">
+      <rect x="212" y="162" width="600" height="700" rx="80" ry="80"/>
+    </clipPath>
+  </defs>
+
+  <!-- tilted, folded notebook, filling most of the canvas -->
+  <g transform="rotate(-9 512 512)">
+
+    <!-- back cover: uniform peek along the left edge, reads as folded/layered pages -->
+    <rect x="120" y="294" width="600" height="600" rx="80" ry="80" fill="#34374B"/>
+
+    <!-- front cover, color banded -->
+    <g clip-path="url(#stackClip2)">
+      <rect x="212" y="162" width="600" height="175" fill="#F2637A"/>
+      <rect x="212" y="337" width="600" height="175" fill="#F6C358"/>
+      <rect x="212" y="512" width="600" height="175" fill="#59CDA0"/>
+      <rect x="212" y="687" width="600" height="175" fill="#5AC8E0"/>
+    </g>
+    <g stroke="#34374B" stroke-width="46" stroke-linecap="butt">
+      <line x1="212" y1="337" x2="812" y2="337"/>
+      <line x1="212" y1="512" x2="812" y2="512"/>
+      <line x1="212" y1="687" x2="812" y2="687"/>
+    </g>
+    <rect x="212" y="162" width="600" height="700" rx="80" ry="80"
+          fill="none" stroke="#34374B" stroke-width="64"/>
+
+    <!-- read chevron -->
+    <path d="M 693.5 732.8 L 753.5 773.5 L 693.5 809.3" fill="none" stroke="#34374B"
+          stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- RSS badge, contained within the top-right corner of the pink band -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M 690 238 A 40 40 0 0 1 725 278" stroke="#34374B" stroke-width="26"/>
+      <path d="M 690 208 A 72 72 0 0 1 757 280" stroke="#34374B" stroke-width="26"/>
+      <path d="M 690 238 A 40 40 0 0 1 725 278" stroke="#FFFFFF" stroke-width="16"/>
+      <path d="M 690 208 A 72 72 0 0 1 757 280" stroke="#FFFFFF" stroke-width="16"/>
+    </g>
+    <circle cx="682" cy="282" r="24" fill="#FFFFFF" stroke="#34374B" stroke-width="6"/>
+  </g>
+</svg>
