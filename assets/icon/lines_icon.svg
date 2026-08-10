@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- punches the front cover's shape out of whatever this mask is applied to,
+         so the back cover's stroke only shows in the peeking sliver, not through the front -->
+    <mask id="frontCutout" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+      <rect x="0" y="0" width="1024" height="1024" fill="#FFFFFF"/>
+      <rect x="212" y="162" width="600" height="700" rx="80" ry="80" fill="#000000"/>
+    </mask>
+  </defs>
+
+  <!-- tilted, folded notebook, drawn as thin outlines only (no fill) -->
+  <g transform="rotate(-9 512 512)">
+
+    <!-- back cover outline: offset silhouette peeking out, suggests the folded page -->
+    <rect x="120" y="312" width="600" height="550" rx="80" ry="80"
+          fill="none" stroke="#34374B" stroke-width="24" mask="url(#frontCutout)"/>
+
+    <!-- front cover outline -->
+    <rect x="212" y="162" width="600" height="700" rx="80" ry="80"
+          fill="none" stroke="#34374B" stroke-width="24"/>
+
+    <!-- orange accent square -->
+    <rect x="276" y="226" width="260" height="260" rx="16" ry="16"
+          fill="none" stroke="#FF5A00" stroke-width="24"/>
+
+    <!-- short heading lines -->
+    <g stroke="#FF5A00" stroke-width="24" stroke-linecap="round">
+      <line x1="600" y1="226" x2="748" y2="226"/>
+      <line x1="600" y1="356" x2="748" y2="356"/>
+      <line x1="600" y1="486" x2="748" y2="486"/>
+    </g>
+
+    <!-- body text lines -->
+    <g stroke="#FF5A00" stroke-width="24" stroke-linecap="round">
+      <line x1="276" y1="616" x2="748" y2="616"/>
+      <line x1="276" y1="746" x2="610" y2="746"/>
+    </g>
+
+    <!-- read chevron -->
+    <path d="M 693.5 721.5 L 753.5 762.2 L 693.5 798" fill="none" stroke="#FF5A00"
+          stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- RSS signal, thin outline arcs with a small solid accent dot -->
+  <g fill="none" stroke="#FF5A00" stroke-width="24" stroke-linecap="round">
+    <path d="M 328 382 A 57 57 0 0 1 385 439"/>
+    <path d="M 328 341 A 98 98 0 0 1 426 439"/>
+    <path d="M 328 301 A 138 138 0 0 1 466 439"/>
+  </g>
+  <circle cx="328" cy="439" r="24" fill="#FF5A00"/>
+</svg>

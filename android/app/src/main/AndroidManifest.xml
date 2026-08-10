@@ -25,6 +25,42 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Alternate launcher icons for runtime switching (see AppIconChannel /
+             MainActivity.setIcon). Exactly one of these should be enabled at a
+             time; PackageManager.setComponentEnabledSetting() toggles which. -->
+        <activity-alias
+            android:name=".AppIconIcon"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconCrayons"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_crayons"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconLines"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_lines"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
