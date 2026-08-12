@@ -44,13 +44,19 @@ class SettingsBloc extends ThrottledBloc<SettingsEvent, SettingsBlocUpdated> {
 
   Future<void> _onUpdateAppIcon(
       UpdateAppIconEvent event, Emitter<SettingsBlocUpdated> emit) async {
+    final previousIcon = settings.appIcon;
+    // Persisted before the platform call: a real Android icon change kills
+    // the process to apply it (see MainActivity.setLauncherIcon), so the
+    // awaited call below never returns on success. Persisting after it would
+    // mean the new selection never gets written before the process dies.
+    settings.appIcon = event.icon;
     try {
       await _appIconChannel.setIcon(event.icon);
     } catch (_) {
+      settings.appIcon = previousIcon;
       _iconUpdateFailedController.add(null);
       return;
     }
-    settings.appIcon = event.icon;
     // ignore: prefer_const_constructors force block to reload whenever something in settings change
     emit(SettingsBlocUpdated());
   }

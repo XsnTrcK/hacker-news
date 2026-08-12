@@ -39,16 +39,35 @@ class MainActivity : FlutterActivity() {
             }
     }
 
+    // Matches android:enabled="true" in AndroidManifest.xml — the alias that
+    // COMPONENT_ENABLED_STATE_DEFAULT resolves to when a state was never
+    // explicitly set (e.g. right after a fresh install).
+    private val defaultAlias by lazy { iconAliases.getValue("icon") }
+
+    private fun isEnabled(alias: String): Boolean {
+        return when (packageManager.getComponentEnabledSetting(ComponentName(packageName, alias))) {
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED -> false
+            else -> alias == defaultAlias
+        }
+    }
+
     private fun setLauncherIcon(targetAlias: String) {
         for (alias in iconAliases.values) {
-            val state = if (alias == targetAlias) {
+            val shouldBeEnabled = alias == targetAlias
+            // Skip aliases already in the desired state: setComponentEnabledSetting
+            // kills the app process even when reasserting the current value, and
+            // main.dart resyncs the icon on every cold start, which would otherwise
+            // kill the app on every launch.
+            if (isEnabled(alias) == shouldBeEnabled) continue
+            val state = if (shouldBeEnabled) {
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED
             } else {
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             }
             // No DONT_KILL_APP flag: the launcher only picks up the new icon
             // once the process restarts, which is the expected (accepted)
-            // behavior for this mechanism.
+            // behavior for an actual icon change.
             packageManager.setComponentEnabledSetting(
                 ComponentName(packageName, alias), state, 0
             )

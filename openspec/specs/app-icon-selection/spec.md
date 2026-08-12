@@ -16,11 +16,15 @@ The system SHALL let the user choose the app's launcher icon from a fixed set of
 - **THEN** the radio button matching the currently active `AppIcon` SHALL be shown as checked, and the other two SHALL be shown as unchecked
 
 ### Requirement: Selected icon is persisted
-The system SHALL persist the user's selected icon so it remains active across app restarts.
+The system SHALL persist the user's selected icon so it remains active across app restarts. On platforms where applying the icon may itself terminate the app process (see "Icon change applies at runtime per platform"), the system SHALL durably persist the selection before invoking the platform-level call that applies it, so the selection is not lost if the process is terminated before that call returns.
 
 #### Scenario: App restarts after a successful icon change
 - **WHEN** the user has successfully changed the icon and then restarts the app
 - **THEN** the previously selected icon SHALL still be reported as the active `AppIcon` value
+
+#### Scenario: Platform-level apply call terminates the process
+- **WHEN** the platform-level call to apply a selected icon causes the app process to be terminated before that call returns a result
+- **THEN** the selection SHALL already be durably persisted, so the next launch reports the newly selected icon as active, not the previous one
 
 #### Scenario: No prior selection exists
 - **WHEN** the app is launched for the first time with no persisted icon preference
@@ -57,3 +61,25 @@ If applying the selected icon at the platform level fails, the system SHALL noti
 - **WHEN** the platform-level call to apply the selected icon throws or fails
 - **THEN** the system SHALL show a toast reading "Could not update icon."
 - **AND** the previously active `AppIcon` SHALL remain the persisted and reported value
+
+### Requirement: Exactly one launcher entry point is presented
+The system SHALL ensure exactly one component (an activity, or an activity-alias on Android) declares itself as the app's launcher entry point at any time, regardless of which icon is currently selected.
+
+#### Scenario: Base activity is never independently launchable on Android
+- **WHEN** the app is installed on Android
+- **THEN** only the activity-alias corresponding to the currently active icon SHALL declare a launcher intent-filter, and the underlying target activity SHALL NOT independently declare one
+
+#### Scenario: Home screen shows a single icon
+- **WHEN** the app is installed or updated on Android
+- **THEN** the device home screen/launcher SHALL show exactly one icon for the app, matching the currently active `AppIcon`
+
+### Requirement: Resyncing the active icon does not restart the app
+The system SHALL treat reapplying the already-active icon (e.g. a startup resync intended to correct drift between the persisted preference and platform state) as a no-op at the platform level, without restarting or terminating the app process.
+
+#### Scenario: Startup resync matches current platform state
+- **WHEN** the app starts and the persisted `AppIcon` selection already matches the active platform-level icon state
+- **THEN** the system SHALL make no platform-level change and SHALL NOT restart or terminate the app process
+
+#### Scenario: Startup resync detects drift
+- **WHEN** the app starts and the persisted `AppIcon` selection does not match the active platform-level icon state
+- **THEN** the system SHALL apply the persisted selection at the platform level, which MAY restart or terminate the app process per the platform's normal icon-change mechanism
