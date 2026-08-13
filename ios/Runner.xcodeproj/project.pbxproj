@@ -14,6 +14,10 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		8EEDDD9261E0B3E1405DBA48 /* AppIcon-Crayons@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AD9254BECC4669149AC33D4A /* AppIcon-Crayons@2x.png */; };
+		CE33B3D2B781BD22466B4C79 /* AppIcon-Crayons@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1558BB51F6505CD3F96C032A /* AppIcon-Crayons@3x.png */; };
+		3F07E0715778A3291BFD3958 /* AppIcon-Lines@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 0935C66026743DD67E55A849 /* AppIcon-Lines@2x.png */; };
+		BF6E8EDF211D84F671D7B2E4 /* AppIcon-Lines@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8AF3BBA5B6F1575A6F9A69FF /* AppIcon-Lines@3x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -46,6 +50,10 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AD9254BECC4669149AC33D4A /* AppIcon-Crayons@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Crayons@2x.png"; sourceTree = "<group>"; };
+		1558BB51F6505CD3F96C032A /* AppIcon-Crayons@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Crayons@3x.png"; sourceTree = "<group>"; };
+		0935C66026743DD67E55A849 /* AppIcon-Lines@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Lines@2x.png"; sourceTree = "<group>"; };
+		8AF3BBA5B6F1575A6F9A69FF /* AppIcon-Lines@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppIcon-Lines@3x.png"; sourceTree = "<group>"; };
 		E21B3655C19C557715E7BD1B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -120,6 +128,10 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+				AD9254BECC4669149AC33D4A /* AppIcon-Crayons@2x.png */,
+				1558BB51F6505CD3F96C032A /* AppIcon-Crayons@3x.png */,
+				0935C66026743DD67E55A849 /* AppIcon-Lines@2x.png */,
+				8AF3BBA5B6F1575A6F9A69FF /* AppIcon-Lines@3x.png */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -192,6 +204,10 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				8EEDDD9261E0B3E1405DBA48 /* AppIcon-Crayons@2x.png in Resources */,
+				CE33B3D2B781BD22466B4C79 /* AppIcon-Crayons@3x.png in Resources */,
+				3F07E0715778A3291BFD3958 /* AppIcon-Lines@2x.png in Resources */,
+				BF6E8EDF211D84F671D7B2E4 /* AppIcon-Lines@3x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -370,7 +386,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.14.1;
+				MARKETING_VERSION = 0.14.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xsntrckstudios.hackernewser;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -507,7 +523,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.14.1;
+				MARKETING_VERSION = 0.14.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xsntrckstudios.hackernewser;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
@@ -534,7 +550,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.14.1;
+				MARKETING_VERSION = 0.14.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.xsntrckstudios.hackernewser;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";

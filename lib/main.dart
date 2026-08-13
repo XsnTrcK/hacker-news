@@ -1,5 +1,7 @@
 // ignore_for_file: import_of_legacy_library_into_null_safe
 
+import 'dart:async';
+
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/comments/apis/comments_api.dart';
@@ -8,6 +10,7 @@ import 'package:hackernews/news/apis/news_api.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/rss/apis/combined_news_api.dart';
 import 'package:hackernews/rss/store/rss_feeds_store.dart';
+import 'package:hackernews/services/app_icon_channel.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
 import 'package:hackernews/news/views/news.dart';
@@ -21,6 +24,10 @@ import 'package:hive_flutter/hive_flutter.dart';
 void main() async {
   await Hive.initFlutter();
   await initSettings();
+  // Reapplies the persisted icon so the active platform icon (or, on Web,
+  // the favicon after a reload) matches the stored preference even if the
+  // OS/browser state fell out of sync since the last successful change.
+  unawaited(AppIconChannel().setIcon(settings.appIcon).catchError((_) {}));
   await getCommentsHandler(client: httpClient).init();
   runApp(const MyApp());
 }

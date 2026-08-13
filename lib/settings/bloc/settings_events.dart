@@ -14,3 +14,8 @@ class UpdateThemeModeEvent extends SettingsEvent {
   final ThemeMode themeMode;
   const UpdateThemeModeEvent(this.themeMode) : super();
 }
+
+class UpdateAppIconEvent extends SettingsEvent {
+  final AppIcon icon;
+  const UpdateAppIconEvent(this.icon) : super();
+}

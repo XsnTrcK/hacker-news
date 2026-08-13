@@ -1,12 +1,41 @@
+import 'dart:async';
+
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/services/theme_extensions.dart';
 import 'package:hackernews/settings/bloc/settings_bloc.dart';
 import 'package:hackernews/settings/bloc/settings_events.dart';
 import 'package:hackernews/store/settings_store.dart';
 
-class Settings extends StatelessWidget {
+class Settings extends StatefulWidget {
   const Settings({super.key});
+
+  @override
+  State<Settings> createState() => _SettingsState();
+}
+
+class _SettingsState extends State<Settings> {
+  StreamSubscription<void>? _iconUpdateFailedSubscription;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _iconUpdateFailedSubscription?.cancel();
+    _iconUpdateFailedSubscription =
+        context.read<SettingsBloc>().iconUpdateFailed.listen((_) {
+      if (!mounted) return;
+      material.ScaffoldMessenger.of(context).showSnackBar(
+        const material.SnackBar(content: Text('Could not update icon.')),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _iconUpdateFailedSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +171,69 @@ class Settings extends StatelessWidget {
                               context.read<SettingsBloc>().add(
                                   const UpdateThemeModeEvent(
                                       ThemeMode.light));
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 5,
+            ),
+            child: Row(
+              children: [
+                Text(
+                  "App Icon:",
+                  style: typography.bodyStrong,
+                ),
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Icon"),
+                          checked: settings.appIcon == AppIcon.icon,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(const UpdateAppIconEvent(AppIcon.icon));
+                            }
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Crayons"),
+                          checked: settings.appIcon == AppIcon.crayons,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context.read<SettingsBloc>().add(
+                                  const UpdateAppIconEvent(AppIcon.crayons));
+                            }
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        child: RadioButton(
+                          content: const Text("Lines"),
+                          checked: settings.appIcon == AppIcon.lines,
+                          onChanged: (checked) {
+                            if (checked) {
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(const UpdateAppIconEvent(AppIcon.lines));
                             }
                           },
                         ),

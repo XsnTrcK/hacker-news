@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <clipPath id="stackClip2">
+      <rect x="212" y="162" width="600" height="700" rx="80" ry="80"/>
+    </clipPath>
+  </defs>
+
+  <!-- tilted, folded notebook, filling most of the canvas -->
+  <g transform="rotate(-9 512 512)">
+
+    <!-- back cover: uniform peek along the left edge, reads as folded/layered pages -->
+    <rect x="120" y="294" width="600" height="600" rx="80" ry="80" fill="#34374B"/>
+
+    <!-- front cover, solid navy -->
+    <g clip-path="url(#stackClip2)">
+      <rect x="244" y="162" width="537" height="700" fill="#34374B"/>
+      <rect x="545" y="194" width="260" height="40" rx="20" ry="20" fill="#FFFFFF"/>
+      <rect x="545" y="324" width="235" height="40" rx="20" ry="20" fill="#FFFFFF"/>
+      <rect x="545" y="454" width="235" height="40" rx="20" ry="20" fill="#FFFFFF"/>
+      <rect x="244" y="584" width="536" height="40" rx="20" ry="20" fill="#FFFFFF"/>
+      <rect x="244" y="714" width="370" height="40" rx="20" ry="20" fill="#FFFFFF"/>
+      <rect x="212" y="194" width="300" height="300" fill="#FF5A00"/>
+    </g>
+    <g stroke="#34374B" stroke-width="46" stroke-linecap="butt">
+      <line x1="522" y1="162" x2="522" y2="512"/>
+      <!--<line x1="512" y1="337" x2="812" y2="337"/>-->
+      <!--<line x1="212" y1="512" x2="812" y2="512"/>-->
+      <!--<line x1="212" y1="687" x2="812" y2="687"/>-->
+    </g>
+    <rect x="212" y="162" width="600" height="700" rx="80" ry="80"
+          fill="none" stroke="#34374B" stroke-width="64"/>
+
+    <!-- read chevron -->
+    <path d="M 693.5 732.8 L 753.5 773.5 L 693.5 809.3" fill="none" stroke="#FF5A00"
+          stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- RSS badge, enlarged to fill the orange section spanning rows 1-2; three concentric arcs -->
+    <g fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round">
+      <path d="M 315 343 A 57 57 0 0 1 372 400"/>
+      <path d="M 315 302 A 98 98 0 0 1 413 400"/>
+      <path d="M 315 262 A 138 138 0 0 1 453 400"/>
+    </g>
+    <circle cx="315" cy="400" r="30" fill="#FFFFFF"/>
+  </g>
+</svg>

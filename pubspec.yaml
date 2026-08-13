@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 0.14.1
+version: 0.14.6
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -55,6 +55,7 @@ dependencies:
   any_link_preview: ^3.0.2
   url_launcher: ^6.3.1
   dart_rss: ^3.0.0
+  web: ^1.1.1
 
 dependency_overrides:
   intl: "0.20.2" # Fixes dependency conflict between dart_rss and fluent_ui
@@ -69,7 +70,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.3
+  flutter_launcher_icons: ^0.14.4
 
 flutter_icons:
   android: true

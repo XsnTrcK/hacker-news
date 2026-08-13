@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 const _fontSizeKey = 'fontSize';
 const _themeModeKey = 'themeMode';
+const _appIconKey = 'appIcon';
 
 enum SettingsFontSize {
   small,
@@ -10,15 +11,23 @@ enum SettingsFontSize {
   large,
 }
 
+enum AppIcon {
+  icon,
+  crayons,
+  lines,
+}
+
 abstract class Settings {
   late SettingsFontSize fontSize;
   late ThemeMode themeMode;
+  late AppIcon appIcon;
 }
 
 class SettingsStore implements Settings {
   late Box<String> _settingsBox;
   SettingsFontSize _fontSize = SettingsFontSize.small;
   ThemeMode _themeMode = ThemeMode.system;
+  AppIcon _appIcon = AppIcon.icon;
 
   Future _init() async {
     _settingsBox = await Hive.openBox<String>("settings");
@@ -32,6 +41,12 @@ class SettingsStore implements Settings {
     for (var themeMode in ThemeMode.values) {
       if (themeMode.name == themeModeName) {
         _themeMode = themeMode;
+      }
+    }
+    final appIconName = _settingsBox.get(_appIconKey);
+    for (var appIcon in AppIcon.values) {
+      if (appIcon.name == appIconName) {
+        _appIcon = appIcon;
       }
     }
   }
@@ -56,6 +71,17 @@ class SettingsStore implements Settings {
   set themeMode(ThemeMode value) {
     _themeMode = value;
     _settingsBox.put(_themeModeKey, value.name);
+  }
+
+  @override
+  AppIcon get appIcon {
+    return _appIcon;
+  }
+
+  @override
+  set appIcon(AppIcon value) {
+    _appIcon = value;
+    _settingsBox.put(_appIconKey, value.name);
   }
 
   static Future<SettingsStore> create() async {
