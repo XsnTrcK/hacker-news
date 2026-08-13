@@ -1,6 +1,5 @@
-import 'dart:io';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/services.dart';
 import 'package:hackernews/store/settings_store.dart';
 
@@ -20,7 +19,9 @@ class AppIconChannel {
       await favicon.updateFavicon(_faviconAssets[icon]!);
       return;
     }
-    if (Platform.isAndroid || Platform.isIOS) {
+
+    final platform = defaultTargetPlatform;
+    if (platform == TargetPlatform.android || platform == TargetPlatform.iOS) {
       await _channel.invokeMethod('setIcon', {'icon': icon.name});
     }
   }
