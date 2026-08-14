@@ -17,7 +17,8 @@ class AlgoliaCommentsRetriever implements CommentsHandler {
   Future init({bool deleteBox = false}) async {
     _commentsBox = await Hive.openBox<String>("comments");
     if (deleteBox) {
-      _commentsBox.deleteFromDisk();
+      await _commentsBox.deleteFromDisk();
+      _commentsBox = await Hive.openBox<String>("comments");
     }
   }
 
@@ -34,6 +35,10 @@ class AlgoliaCommentsRetriever implements CommentsHandler {
   Future<List<CommentItem>> fetchComments(ItemWithKids itemWithKids) async {
     final response = await _httpClient
         .get(Uri.parse('$_algoliaItemBase/${itemWithKids.id}'));
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Algolia comments fetch failed for story ${itemWithKids.id}: HTTP ${response.statusCode}');
+    }
     final Map<String, dynamic> storyNode = jsonDecode(response.body);
     final children = (storyNode['children'] as List?) ?? [];
 

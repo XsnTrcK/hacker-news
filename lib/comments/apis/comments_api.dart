@@ -2,7 +2,7 @@ import 'package:hackernews/comments/apis/algolia_comments_api.dart';
 import 'package:hackernews/models/item.dart';
 import 'package:http/http.dart';
 
-AlgoliaCommentsRetriever? _commentsApi;
+CommentsHandler? _commentsApi;
 
 abstract class CommentsHandler {
   const CommentsHandler();
