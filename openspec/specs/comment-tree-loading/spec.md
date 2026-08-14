@@ -1,4 +1,10 @@
-## ADDED Requirements
+# comment-tree-loading Specification
+
+## Purpose
+
+Defines how a story's comment tree is fetched and cached once a story is opened, including the accepted behavior around dead/deleted comments.
+
+## Requirements
 
 ### Requirement: Single-request comment tree fetch
 When a user opens a story's comments, the system SHALL retrieve the entire comment tree for that story in a single upstream request, rather than issuing one request per comment.
