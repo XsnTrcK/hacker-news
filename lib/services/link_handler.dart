@@ -14,6 +14,7 @@ Future<Item?> _getNewsItem(int itemId) async {
     return newsStore.get(itemId);
   }
   final item = await newsApiRetriever.getNewsItem(itemId);
+  newsStore.applyStoredState(item);
   newsStore.save(item);
   return item;
 }

@@ -19,8 +19,7 @@ extension ItemMap on Map<String, dynamic> {
   bool get isDead => this["dead"] ?? false;
   ItemState get state => ItemState.fromJson(this["state"]);
   bool get isExpanded => this["isExpanded"] ?? false;
-  bool get savedForReadLater => this["savedForReadLater"] ?? false;
-  bool get hasBeenRead => this["hasBeenRead"] ?? false;
+  bool? get savedForReadLater => this["savedForReadLater"] as bool?;
   bool? get displayReaderMode => this["displayReaderMode"] as bool?;
   String get feedName => this["feedName"] ?? '';
   int? get hnItemId => this["hnItemId"];
@@ -28,14 +27,12 @@ extension ItemMap on Map<String, dynamic> {
 
 class ItemState {
   bool isExpanded;
-  bool savedForReadLater;
-  bool hasBeenRead;
+  bool? savedForReadLater;
   bool? displayReaderMode;
 
   ItemState({
     this.isExpanded = true,
-    this.savedForReadLater = false,
-    this.hasBeenRead = false,
+    this.savedForReadLater,
     this.displayReaderMode,
   });
 
@@ -44,7 +41,6 @@ class ItemState {
     return ItemState(
       isExpanded: stateMap.isExpanded,
       savedForReadLater: stateMap.savedForReadLater,
-      hasBeenRead: stateMap.hasBeenRead,
       displayReaderMode: stateMap.displayReaderMode,
     );
   }
@@ -53,9 +49,39 @@ class ItemState {
     return {
       "isExpanded": isExpanded,
       "savedForReadLater": savedForReadLater,
-      "hasBeenRead": hasBeenRead,
       "displayReaderMode": displayReaderMode,
     };
+  }
+}
+
+/// Lean persisted record for an article whose reader-mode or bookmark state
+/// has been touched: `{id, displayReaderMode, bookmarked}`. Unlike
+/// [Item.toMap]/[Item.fromJson], this shape carries no title/url/score/text/
+/// kids/descendants and cannot reconstruct a full [Item].
+class LeanItemRecord {
+  final int id;
+  final bool? displayReaderMode;
+  final bool? bookmarked;
+
+  const LeanItemRecord({
+    required this.id,
+    this.displayReaderMode,
+    this.bookmarked,
+  });
+
+  String toJson() => jsonEncode({
+        "id": id,
+        "displayReaderMode": displayReaderMode,
+        "bookmarked": bookmarked,
+      });
+
+  factory LeanItemRecord.fromJson(String jsonString) {
+    final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+    return LeanItemRecord(
+      id: jsonMap["id"] as int,
+      displayReaderMode: jsonMap["displayReaderMode"] as bool?,
+      bookmarked: jsonMap["bookmarked"] as bool?,
+    );
   }
 }
 
@@ -68,8 +94,10 @@ abstract class Item {
 
   Item(this.id, this.time, this.createdBy, this.state, {this.text});
 
-  factory Item.fromJson(String jsonString) {
-    final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
+  factory Item.fromJson(String jsonString) =>
+      Item.fromMap(jsonDecode(jsonString));
+
+  factory Item.fromMap(Map<String, dynamic> jsonMap) {
     switch (jsonMap["type"]) {
       case "rss":
         return RssStoryItem(
@@ -171,6 +199,12 @@ abstract class Item {
 
     return jsonDict;
   }
+
+  Map<String, dynamic> toLeanMap() => {
+        "id": id,
+        "displayReaderMode": state.displayReaderMode,
+        "bookmarked": state.savedForReadLater,
+      };
 
   String prettySinceMessage() {
     final itemDate = DateTime.fromMillisecondsSinceEpoch(time * 1000);

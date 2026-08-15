@@ -17,12 +17,15 @@ import 'package:hackernews/news/views/news.dart';
 import 'package:hackernews/services/theme_extensions.dart';
 import 'package:hackernews/settings/bloc/settings_bloc.dart';
 import 'package:hackernews/settings/bloc/settings_state.dart';
+import 'package:hackernews/store/bookmarks_store.dart';
+import 'package:hackernews/store/lean_cache_migration.dart';
 import 'package:hackernews/store/settings_store.dart';
 import 'package:hackernews/store/store.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {
   await Hive.initFlutter();
+  await runLeanHiveCacheMigration();
   await initSettings();
   // Reapplies the persisted icon so the active platform icon (or, on Web,
   // the favicon after a reload) matches the stored preference even if the
@@ -43,7 +46,7 @@ class _MyAppState extends State<MyApp> {
   Widget _createNewsPage() {
     return FutureBuilder(
       future: Future.wait(
-        [initNewsStore(), initRssFeedsStore()],
+        [initNewsStore(), initRssFeedsStore(), initBookmarksStore()],
       ),
       builder: (context, AsyncSnapshot<void> snapshot) {
         if (snapshot.hasData) {

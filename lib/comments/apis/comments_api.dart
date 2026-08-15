@@ -10,7 +10,8 @@ abstract class CommentsHandler {
   Future init({bool deleteBox});
   Future<List<CommentItem>> fetchComments(ItemWithKids itemWithKids);
   CommentItem getComment(int commentId);
-  void updateComment(CommentItem comment);
+  void collapseComment(int commentId);
+  void expandComment(int commentId);
 }
 
 CommentsHandler getCommentsHandler({Client? client}) {
