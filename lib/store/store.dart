@@ -36,7 +36,8 @@ class NewsStore extends Store<Item> with ItemUpdater<Item> {
     _newsBox = await Hive.openBox<String>("news");
 
     if (deleteBox) {
-      _newsBox.deleteFromDisk();
+      await _newsBox.deleteFromDisk();
+      _newsBox = await Hive.openBox<String>("news");
     }
   }
 

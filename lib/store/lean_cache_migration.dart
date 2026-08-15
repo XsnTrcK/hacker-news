@@ -67,7 +67,9 @@ Future<void> runLeanHiveCacheMigration() async {
   }
 
   await newsBox.delete(_legacySavedItemsKey);
-  await Hive.deleteBoxFromDisk('comments');
+  if (await Hive.boxExists('comments')) {
+    await Hive.deleteBoxFromDisk('comments');
+  }
 
   await settingsBox.put(_migrationCompleteKey, 'true');
 }

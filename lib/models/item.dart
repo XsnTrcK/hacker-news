@@ -78,7 +78,7 @@ class LeanItemRecord {
   factory LeanItemRecord.fromJson(String jsonString) {
     final Map<String, dynamic> jsonMap = jsonDecode(jsonString);
     return LeanItemRecord(
-      id: jsonMap["id"],
+      id: jsonMap["id"] as int,
       displayReaderMode: jsonMap["displayReaderMode"] as bool?,
       bookmarked: jsonMap["bookmarked"] as bool?,
     );
