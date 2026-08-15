@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Bounds on-disk storage for fetched articles by actual user interaction rather than browsing volume, by persisting only a lean `{id, displayReaderMode, bookmarked}` record for articles whose reader-mode or bookmark state has been explicitly touched, and by migrating pre-existing full-content records to this shape on first launch.
+
+## Requirements
 
 ### Requirement: Lean-by-default article persistence
 The system SHALL NOT persist an article's title, url, score, text, kids, or descendants to the `"news"` Hive box. The system SHALL write a record for an article to the `"news"` box only when that article's `displayReaderMode` has been explicitly set (non-null) or its `savedForReadLater` (bookmarked) flag has been explicitly toggled by the user. When written, the record SHALL contain only `{id, displayReaderMode, bookmarked}`.

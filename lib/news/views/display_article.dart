@@ -103,7 +103,7 @@ class _DisplayArticle extends State<DisplayArticle> {
         ),
         Expanded(
           child: IconButton(
-            icon: Icon(item.state.savedForReadLater
+            icon: Icon((item.state.savedForReadLater ?? false)
                 ? FluentIcons.single_bookmark_solid
                 : FluentIcons.single_bookmark),
             onPressed: () {
@@ -176,8 +176,7 @@ class _DisplayArticle extends State<DisplayArticle> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) =>
-          ItemBloc<TitledItem>(newsStore)..add(HasBeenReadEvent(widget.item)),
+      create: (_) => ItemBloc<TitledItem>(newsStore, widget.item),
       child: _buildPage(context),
     );
   }

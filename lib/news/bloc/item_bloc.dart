@@ -11,10 +11,10 @@ class ItemBloc<T extends Item>
     extends ThrottledBloc<ItemEvent<T>, ItemBlocState<T>> {
   final ItemUpdater _itemUpdater;
 
-  ItemBloc(this._itemUpdater) : super(const ItemBlocState()) {
+  ItemBloc(this._itemUpdater, T initialItem)
+      : super(ItemBlocState<T>(item: initialItem)) {
     on<SaveToReadLaterEvent<T>>(_onSaveToReadLater,
         transformer: throttleDroppable());
-    on<HasBeenReadEvent<T>>(_onHasBeenRead, transformer: throttleDroppable());
     on<DisplayReaderModeEvent<T>>(_onDisplayReaderMode,
         transformer: throttleDroppable());
   }
@@ -23,16 +23,6 @@ class ItemBloc<T extends Item>
       SaveToReadLaterEvent<T> event, Emitter<ItemBlocState<T>> emit) {
     try {
       final updatedItem = _itemUpdater.saveToReadLater(event.item);
-      emit(ItemBlocState<T>(item: updatedItem));
-    } catch (error) {
-      log("Error: $error");
-    }
-  }
-
-  void _onHasBeenRead(
-      HasBeenReadEvent<T> event, Emitter<ItemBlocState<T>> emit) {
-    try {
-      final updatedItem = _itemUpdater.markHasBeenRead(event.item);
       emit(ItemBlocState<T>(item: updatedItem));
     } catch (error) {
       log("Error: $error");

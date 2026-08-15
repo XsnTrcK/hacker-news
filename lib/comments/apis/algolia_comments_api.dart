@@ -9,26 +9,31 @@ class AlgoliaCommentsRetriever implements CommentsHandler {
   static const _algoliaItemBase = 'https://hn.algolia.com/api/v1/items';
 
   final Client _httpClient;
-  late Box<String> _commentsBox;
+  late Box<bool> _commentsBox;
+
+  // Comment content is fetched from the network every time and never
+  // persisted; this cache only lives for the current session so getComment
+  // can look up a comment already fetched this run.
+  final Map<int, CommentItem> _cache = {};
 
   AlgoliaCommentsRetriever(this._httpClient);
 
   @override
   Future init({bool deleteBox = false}) async {
-    _commentsBox = await Hive.openBox<String>("comments");
+    _commentsBox = await Hive.openBox<bool>("comments");
     if (deleteBox) {
       await _commentsBox.deleteFromDisk();
-      _commentsBox = await Hive.openBox<String>("comments");
+      _commentsBox = await Hive.openBox<bool>("comments");
     }
   }
 
   @override
   CommentItem getComment(int commentId) {
-    if (!_commentsBox.containsKey(commentId)) {
+    final comment = _cache[commentId];
+    if (comment == null) {
       throw Exception("Comment could not be found in the store");
-    } else {
-      return Item.fromJson(_commentsBox.get(commentId)!) as CommentItem;
     }
+    return comment;
   }
 
   @override
@@ -49,18 +54,19 @@ class AlgoliaCommentsRetriever implements CommentsHandler {
 
   CommentItem _flatten(Map<String, dynamic> node) {
     final children = (node['children'] as List?) ?? [];
+    final id = node['id'] as int;
     final comment = CommentItem(
-      node['id'] as int,
+      id,
       node['created_at_i'] as int,
       (node['author'] as String?) ?? '',
-      ItemState(),
+      ItemState(isExpanded: !_commentsBox.containsKey(id)),
       (node['text'] as String?) ?? '',
       children.map((c) => (c as Map<String, dynamic>)['id'] as int).toList(),
       node['parent_id'] as int,
       false,
       false,
     );
-    _commentsBox.put(comment.id, jsonEncode(comment.toMap()));
+    _cache[comment.id] = comment;
 
     for (final child in children) {
       _flatten(child as Map<String, dynamic>);
@@ -70,7 +76,8 @@ class AlgoliaCommentsRetriever implements CommentsHandler {
   }
 
   @override
-  Future updateComment(CommentItem comment) async {
-    _commentsBox.put(comment.id, jsonEncode(comment.toMap()));
-  }
+  void collapseComment(int commentId) => _commentsBox.put(commentId, true);
+
+  @override
+  void expandComment(int commentId) => _commentsBox.delete(commentId);
 }

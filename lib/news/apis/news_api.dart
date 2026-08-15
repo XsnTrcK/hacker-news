@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:hackernews/models/item.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
+import 'package:hackernews/store/bookmarks_store.dart';
 import 'package:hackernews/store/store.dart';
 import 'package:http/http.dart';
 import 'package:hackernews/services/config.dart' as config;
@@ -27,14 +28,14 @@ Client get httpClient {
 }
 
 class SavedArticlesRetriever extends NewsApi {
-  late List<int> _savedNews = [];
+  late List<Item> _savedNews = [];
 
   SavedArticlesRetriever(super.client) {
     _updateSavedNews();
   }
 
   void _updateSavedNews() {
-    _savedNews = newsStore.savedItems;
+    _savedNews = bookmarksStore.orderedBookmarks();
   }
 
   @override
@@ -46,20 +47,7 @@ class SavedArticlesRetriever extends NewsApi {
     var endIndex = offset + count >= _savedNews.length
         ? _savedNews.length
         : offset + count;
-    List<TitledItem> newsToReturn = [];
-    for (; offset < endIndex; offset++) {
-      final newsId = _savedNews[offset];
-      Item? newsItem;
-      if (newsStore.containsKey(newsId)) {
-        newsItem = newsStore.get(newsId);
-      } else {
-        newsItem = await getNewsItem(newsId);
-        newsStore.save(newsItem);
-      }
-      newsToReturn.add(newsItem as TitledItem);
-    }
-
-    return newsToReturn;
+    return _savedNews.sublist(offset, endIndex).cast<TitledItem>();
   }
 
   @override
@@ -118,6 +106,7 @@ class NewsApiRetriever extends NewsApi {
         newsItem = newsStore.get(newsId);
       } else {
         newsItem = await getNewsItem(newsId);
+        newsStore.applyStoredState(newsItem);
         newsStore.save(newsItem);
       }
       newsToReturn.add(newsItem as TitledItem);

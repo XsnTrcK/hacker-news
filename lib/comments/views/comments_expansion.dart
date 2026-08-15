@@ -49,7 +49,11 @@ class _CommentsExpansionState extends State<CommentsExpansion> {
         initiallyExpanded: _isExpanded,
         onExpansionChanged: (expanded) {
           comment.state.isExpanded = expanded;
-          _commentsHandler.updateComment(comment);
+          if (expanded) {
+            _commentsHandler.expandComment(comment.id);
+          } else {
+            _commentsHandler.collapseComment(comment.id);
+          }
           setState(() => _isExpanded = expanded);
         },
         title: Container(

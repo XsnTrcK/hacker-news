@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:hackernews/models/item.dart';
+import 'package:hackernews/store/bookmarks_store.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 abstract class Store<T> {
@@ -12,11 +13,7 @@ abstract class Store<T> {
 }
 
 abstract mixin class ItemUpdater<T> {
-  final String _savedItemsKey = "savedItems";
-  late List<int> savedItems = [];
-
   T saveToReadLater(T item);
-  T markHasBeenRead(T item);
   T displayReaderMode(T item);
 }
 
@@ -37,52 +34,54 @@ class NewsStore extends Store<Item> with ItemUpdater<Item> {
 
   Future _init({bool deleteBox = false}) async {
     _newsBox = await Hive.openBox<String>("news");
-    savedItems =
-        (jsonDecode(_newsBox.get(_savedItemsKey) ?? "[]") as List).cast<int>();
 
     if (deleteBox) {
       _newsBox.deleteFromDisk();
     }
   }
 
+  // The "news" box only ever holds lean records now, so containsKey/get are
+  // pure in-memory lookups scoped to the current session — they cannot
+  // reconstruct a full Item from disk (title/url/score are never persisted).
   @override
-  bool containsKey<TKey>(TKey key) {
-    if (!_store.containsKey(key)) {
-      if (_newsBox.containsKey(key)) {
-        final itemString = _newsBox.get(key);
-        final item = Item.fromJson(itemString!);
-        _store[item.id] = item;
-      }
-    }
-    return _store.containsKey(key);
-  }
+  bool containsKey<TKey>(TKey key) => _store.containsKey(key);
 
   @override
   Item get<TKey>(TKey key) => _store[key]!;
 
-  @override
-  void save(Item item) {
-    _store[item.id] = item;
-    _newsBox.put(item.id, jsonEncode(item.toMap()));
+  LeanItemRecord? leanRecord(int id) {
+    final raw = _newsBox.get(id);
+    return raw == null ? null : LeanItemRecord.fromJson(raw);
+  }
+
+  /// Re-applies a previously persisted reader-mode/bookmark toggle onto a
+  /// freshly network-fetched item, since full content is never cached.
+  void applyStoredState(Item item) {
+    final record = leanRecord(item.id);
+    if (record == null) return;
+    item.state.displayReaderMode = record.displayReaderMode;
+    item.state.savedForReadLater = record.bookmarked;
   }
 
   @override
-  Item markHasBeenRead(Item item) {
-    item.state.hasBeenRead = true;
-    save(item);
-    return item;
+  void save(Item item) {
+    _store[item.id] = item;
+    final touched = item.state.displayReaderMode != null ||
+        item.state.savedForReadLater != null;
+    if (touched) {
+      _newsBox.put(item.id, jsonEncode(item.toLeanMap()));
+    }
   }
 
   @override
   Item saveToReadLater(Item item) {
-    item.state.savedForReadLater = !item.state.savedForReadLater;
+    item.state.savedForReadLater = !(item.state.savedForReadLater ?? false);
     save(item);
-    if (item.state.savedForReadLater) {
-      savedItems.insert(0, item.id);
+    if (item.state.savedForReadLater == true) {
+      bookmarksStore.addBookmark(item);
     } else {
-      savedItems.remove(item.id);
+      bookmarksStore.removeBookmark(item.id);
     }
-    _newsBox.put(_savedItemsKey, jsonEncode(savedItems));
     return item;
   }
 

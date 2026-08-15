@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Tracks which comments the user has manually collapsed without ever caching comment content, by persisting only a presence marker per collapsed comment id — comment bodies are always fetched fresh from the network.
+
+## Requirements
 
 ### Requirement: Comment bodies are never persisted
 The system SHALL always fetch comment content (text, kids, parent, deleted, dead) from the network and SHALL NOT persist comment content to the `"comments"` Hive box under any circumstance, including for comments belonging to a bookmarked article.

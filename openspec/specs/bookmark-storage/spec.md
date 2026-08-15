@@ -1,4 +1,8 @@
-## ADDED Requirements
+## Purpose
+
+Keeps a durable, full-content copy of every bookmarked article in a dedicated Hive box so the Saved-For-Later list loads instantly and offline, ordered by bookmark recency, without depending on the article's source (HN or RSS) still having the content available.
+
+## Requirements
 
 ### Requirement: Full-content persistence for bookmarked articles
 The system SHALL persist the complete item content (equivalent to `Item.toMap()`) for every bookmarked article in a dedicated `"bookmarks"` Hive box, keyed by article id, alongside a `bookmarkedAt` timestamp recorded at the time of bookmarking. This is the only case in which full article content is written to disk.
