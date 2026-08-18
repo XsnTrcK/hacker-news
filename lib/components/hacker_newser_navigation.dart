@@ -2,11 +2,15 @@ import 'package:colorful_safe_area/colorful_safe_area.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hackernews/menu/menu.dart';
+import 'package:hackernews/news/apis/news_api.dart';
 import 'package:hackernews/news/bloc/news_bloc.dart';
 import 'package:hackernews/news/bloc/news_events.dart';
 import 'package:hackernews/news/bloc/news_state.dart';
 import 'package:hackernews/rss/models/rss_feed.dart';
 import 'package:hackernews/rss/store/rss_feeds_store.dart';
+import 'package:hackernews/search/apis/algolia_story_search_api.dart';
+import 'package:hackernews/search/bloc/search_bloc.dart';
+import 'package:hackernews/search/views/search_page.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -24,6 +28,28 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
   FeedMode _feedMode = FeedMode.all;
   NewsType _hnNewsType = NewsType.top;
   RssFeedInfo _rssFeedFilter = allFeedsInfo;
+  final _swipeSearchBloc = SearchBloc(AlgoliaStorySearchApi(httpClient));
+  final _swipeSearchFocusNode = FocusNode();
+  final _swipeSearchQueryController = TextEditingController();
+
+  @override
+  void dispose() {
+    _swipeSearchBloc.close();
+    _swipeSearchFocusNode.dispose();
+    _swipeSearchQueryController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int page) {
+    if (page == 2) {
+      if (_swipeSearchQueryController.text.isEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _swipeSearchFocusNode.requestFocus());
+      }
+    } else {
+      _swipeSearchFocusNode.unfocus();
+    }
+  }
 
   void _onFeedModeChanged(FeedMode mode) {
     setState(() {
@@ -179,9 +205,20 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
         color: theme.scaffoldBackgroundColor,
         child: PageView(
           controller: widget._pageController,
+          onPageChanged: _onPageChanged,
           children: [
-            Menu(key: UniqueKey()),
+            const Menu(),
             _buildNewsPage(theme),
+            ColorfulSafeArea(
+              color: theme.scaffoldBackgroundColor,
+              child: BlocProvider.value(
+                value: _swipeSearchBloc,
+                child: SearchPage(
+                  focusNode: _swipeSearchFocusNode,
+                  queryController: _swipeSearchQueryController,
+                ),
+              ),
+            ),
           ],
         ),
       ),

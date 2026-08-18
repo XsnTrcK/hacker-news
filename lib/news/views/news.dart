@@ -16,11 +16,14 @@ class News extends StatefulWidget {
   State<News> createState() => _NewsState();
 }
 
-class _NewsState extends State<News> {
+class _NewsState extends State<News> with AutomaticKeepAliveClientMixin<News> {
   final _scrollController = ScrollController();
   NewsType _newsType = NewsType.top;
   FeedMode _feedMode = FeedMode.all;
   RssFeedInfo _rssFeedFilter = allFeedsInfo;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -47,6 +50,7 @@ class _NewsState extends State<News> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return BlocBuilder<NewsBloc, NewsState>(
       builder: (context, state) {
         _newsType = state.newsType;
