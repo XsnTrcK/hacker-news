@@ -74,6 +74,10 @@ class AlgoliaStorySearchApi {
         'page': '$page',
       });
       final response = await _httpClient.get(uri);
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Algolia story search failed for "$trimmed": HTTP ${response.statusCode}');
+      }
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       final hits = (body['hits'] as List? ?? []).cast<Map<String, dynamic>>();
       return AlgoliaSearchResult(
