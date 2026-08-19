@@ -1,19 +1,25 @@
-## ADDED Requirements
+# Story Search Specification
 
-### Requirement: Search entry point on the News page
-The News page SHALL display a floating search button that opens a dedicated search screen, visible only while viewing Hacker News-backed feeds.
+## Purpose
 
-#### Scenario: User opens search from the News page
-- **WHEN** the user taps the floating search button while the News page is showing
-- **THEN** a full-screen search view opens with an empty query field and no results shown
+Lets users find Hacker News stories by keyword search instead of only browsing the main feed, reusing the existing story list and detail views.
 
-#### Scenario: Search button hidden in RSS feed mode
-- **WHEN** the user's feed mode is set to RSS-only
-- **THEN** the floating search button is not shown
+## Requirements
 
-#### Scenario: Search button hidden while not viewing the News page
-- **WHEN** the user is viewing a page other than the News page (e.g. the side menu)
-- **THEN** the floating search button is not shown, regardless of feed mode
+### Requirement: Search entry point via swipe
+The app SHALL provide a dedicated search page reachable by swiping left from the News page, regardless of feed mode, with its query text and results preserved as the user navigates away and back.
+
+#### Scenario: User swipes to the search page
+- **WHEN** the user swipes left from the News page
+- **THEN** a search view is shown, with the query field auto-focused only if it is currently empty
+
+#### Scenario: Search state persists across navigation
+- **WHEN** the user swipes away from the search page and back
+- **THEN** the previously entered query text and results remain displayed, and the keyboard is not automatically reopened
+
+#### Scenario: Search page reachable regardless of feed mode
+- **WHEN** the user's feed mode is set to RSS-only, All, or Hacker News
+- **THEN** the search page remains reachable by swiping left from the News page
 
 ### Requirement: Story search by keyword
 The system SHALL let the user search Hacker News stories by entering plain query text, returning matching stories ranked by Algolia's default relevance ordering.
