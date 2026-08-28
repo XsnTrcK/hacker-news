@@ -1,8 +1,10 @@
+# Comment Link Hn Match Specification
+
 ## Purpose
 
 Lets a user land on an existing Hacker News discussion for an article link found inside a comment, instead of always leaving the app, when that discussion can be confidently identified.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Comment links are checked for an existing HN discussion before external launch
 When a user taps a link inside a comment body whose URL is not already a `news.ycombinator.com` item link, the app SHALL check whether an HN discussion exists for that URL before falling back to opening the link externally.

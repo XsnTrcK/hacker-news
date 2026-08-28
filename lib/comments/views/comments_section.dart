@@ -6,7 +6,9 @@ import 'package:hackernews/comments/bloc/comments_events.dart';
 import 'package:hackernews/comments/bloc/comments_state.dart';
 import 'package:hackernews/comments/views/comments_expansion.dart';
 import 'package:fluent_ui/fluent_ui.dart' as fluent_ui;
+import 'package:hackernews/components/custom_text.dart';
 import 'package:hackernews/models/item.dart';
+import 'package:hackernews/services/link_handler.dart';
 
 class CommentsSection extends StatelessWidget {
   final ItemWithKids itemWithKids;
@@ -46,12 +48,42 @@ class CommentsSection extends StatelessWidget {
               }
               return Material(
                 color: theme.scaffoldBackgroundColor,
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  children: startWidget == null
-                      ? commentWidgets
-                      : [startWidget!, ...commentWidgets],
+                child: Column(
+                  children: [
+                    ValueListenableBuilder<int>(
+                      valueListenable: pendingCommentLinkChecks,
+                      builder: (context, pendingCount, _) =>
+                          pendingCount > 0
+                              ? Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 5, vertical: 2),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const CustomText(
+                                        'Checking for HN discussion',
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const SizedBox(
+                                        width: 60,
+                                        child: fluent_ui.ProgressBar(),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        children: startWidget == null
+                            ? commentWidgets
+                            : [startWidget!, ...commentWidgets],
+                      ),
+                    ),
+                  ],
                 ),
               );
             case CommentsStatus.failure:
