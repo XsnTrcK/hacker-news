@@ -52,31 +52,29 @@ class CommentsSection extends StatelessWidget {
                   children: [
                     ValueListenableBuilder<int>(
                       valueListenable: pendingCommentLinkChecks,
-                      builder: (context, pendingCount, _) =>
-                          pendingCount > 0
-                              ? Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 2),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const CustomText(
-                                        'Checking for HN discussion',
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      const SizedBox(
-                                        width: 60,
-                                        child: fluent_ui.ProgressBar(),
-                                      ),
-                                    ],
+                      builder: (context, pendingCount, _) => pendingCount > 0
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const CustomText(
+                                    'Checking for HN discussion',
+                                    padding: EdgeInsets.zero,
                                   ),
-                                )
-                              : const SizedBox.shrink(),
+                                  const SizedBox(width: 8),
+                                  const SizedBox(
+                                    width: 60,
+                                    child: fluent_ui.ProgressBar(),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(),
                     ),
                     Expanded(
                       child: ListView(
-                        shrinkWrap: true,
                         padding: const EdgeInsets.symmetric(horizontal: 5),
                         children: startWidget == null
                             ? commentWidgets
