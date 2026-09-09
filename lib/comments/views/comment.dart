@@ -53,7 +53,7 @@ class _CommentState extends State<Comment> {
                 visible: _isExpanded,
                 child: Html(
                   data: '<body>${comment.text}</body>',
-                  onLinkTap: (url, _, __) => handleLinkTap(context, url),
+                  onLinkTap: (url, _, __) => handleCommentLinkTap(context, url),
                   style: {
                     "body": Style(
                       fontSize: FontSize(typography.caption!.fontSize!),
