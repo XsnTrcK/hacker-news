@@ -400,16 +400,26 @@ class _HackerNewserNavigationState extends State<HackerNewserNavigation> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = fluent.FluentTheme.of(context);
-    final hasRss = rssFeedsStore.feeds.isNotEmpty;
-    if (!hasRss) {
+  // Without RSS feeds configured, `FeedMode.all`/`.rss` have nothing to show,
+  // so force `.hn`. Guarded on the current value and deferred past this frame
+  // so it doesn't re-dispatch a fetch on every rebuild while RSS stays empty
+  // (previously ran unconditionally inside build()).
+  void _forceHnModeIfNoRss(bool hasRss) {
+    if (hasRss || _feedMode == FeedMode.hn) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       setState(() {
         _feedMode = FeedMode.hn;
       });
       _dispatchFetch();
-    }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = fluent.FluentTheme.of(context);
+    final hasRss = rssFeedsStore.feeds.isNotEmpty;
+    _forceHnModeIfNoRss(hasRss);
     return NavigationBreakpoint.of(context) == NavigationLayoutMode.wide
         ? _buildWideLayout(theme, hasRss)
         : _buildCompactLayout(theme, hasRss);
