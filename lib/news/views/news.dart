@@ -48,6 +48,31 @@ class _NewsState extends State<News> with AutomaticKeepAliveClientMixin<News> {
     }
   }
 
+  Future<void> _refresh() async {
+    context.read<NewsBloc>().add(RefreshNews(
+          _newsType,
+          feedMode: _feedMode,
+          rssFeedFilter: _rssFeedFilter,
+        ));
+  }
+
+  // A bare Center isn't scrollable, so RefreshIndicator can't detect the
+  // pull gesture on it — wrap it in an always-scrollable ListView instead.
+  Widget _refreshableMessage(String message) {
+    return material.RefreshIndicator(
+      onRefresh: _refresh,
+      child: ListView(
+        physics: const material.AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: Center(child: Text(message)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -59,14 +84,10 @@ class _NewsState extends State<News> with AutomaticKeepAliveClientMixin<News> {
         switch (state.status) {
           case NewsStatus.sucess:
             if (state.news.isEmpty) {
-              return const Center(child: Text('No posts currently available'));
+              return _refreshableMessage('No posts currently available');
             }
             return material.RefreshIndicator(
-              onRefresh: () async => context.read<NewsBloc>().add(RefreshNews(
-                    _newsType,
-                    feedMode: _feedMode,
-                    rssFeedFilter: _rssFeedFilter,
-                  )),
+              onRefresh: _refresh,
               child: ListView.separated(
                 itemCount: state.news.length,
                 separatorBuilder: (_, __) => const Divider(),
@@ -92,7 +113,7 @@ class _NewsState extends State<News> with AutomaticKeepAliveClientMixin<News> {
               ),
             );
           case NewsStatus.failure:
-            return const Center(child: Text('Failed to fetch posts'));
+            return _refreshableMessage('Failed to fetch posts');
           case NewsStatus.initial:
             return const Center(child: ProgressBar());
         }
